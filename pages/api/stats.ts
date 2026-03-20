@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { db } from "@/lib/db";
 import { workouts, workoutSets } from "@/lib/schema";
 import { eq, isNotNull, sql, gte, and } from "drizzle-orm";
-import { getWeekDates, getDaysAgo, formatDate } from "@/lib/utils";
+import { getWeekDates, getDaysAgo, formatDate, nowLocal } from "@/lib/utils";
 
 export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
   const { start: weekStart, end: weekEnd } = getWeekDates();
@@ -56,7 +56,7 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
   let tempStreak = 0;
 
   // Calculate streaks by day
-  const today = formatDate(new Date());
+  const today = formatDate(nowLocal());
   for (let i = workoutDates.length - 1; i >= 0; i--) {
     const d = new Date(workoutDates[i] + "T00:00:00");
     const expected = new Date();
@@ -90,7 +90,7 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
   }
 
   // Calendar data: from first workout to today, Sun=0 top, Sat=6 bottom
-  const todayDate = new Date();
+  const todayDate = nowLocal();
   const firstWorkoutDate = workoutDates.length > 0
     ? new Date(workoutDates[0] + "T00:00:00")
     : todayDate;

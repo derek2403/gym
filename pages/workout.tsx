@@ -162,7 +162,7 @@ export default function WorkoutPage() {
     await fetch(`/api/workouts/${activeWorkoutId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ completedAt: new Date().toISOString() }),
+      body: JSON.stringify({}),
     });
     setActiveWorkoutId(null);
     setSets([]);

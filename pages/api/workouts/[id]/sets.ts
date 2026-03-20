@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { db } from "@/lib/db";
 import { workoutSets } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { nowISO } from "@/lib/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const workoutId = Number(req.query.id);
@@ -22,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         setNumber,
         weightKg: weightKg || 0,
         reps: reps || 0,
-        completedAt: new Date().toISOString(),
+        completedAt: nowISO(),
       })
       .returning()
       .all();

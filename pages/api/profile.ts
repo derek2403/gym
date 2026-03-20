@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { db } from "@/lib/db";
 import { profiles } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { nowISO } from "@/lib/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET") {
@@ -26,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           goalType,
           neckCm,
           hipCm,
-          updatedAt: new Date().toISOString(),
+          updatedAt: nowISO(),
         })
         .where(eq(profiles.id, existing.id))
         .run();

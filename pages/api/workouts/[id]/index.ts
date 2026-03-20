@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { db } from "@/lib/db";
 import { workouts, workoutSets } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { nowISO } from "@/lib/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const id = Number(req.query.id);
@@ -17,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "PUT") {
     const { completedAt } = req.body;
     db.update(workouts)
-      .set({ completedAt: completedAt || new Date().toISOString() })
+      .set({ completedAt: completedAt || nowISO() })
       .where(eq(workouts.id, id))
       .run();
     const workout = db.select().from(workouts).where(eq(workouts.id, id)).get();

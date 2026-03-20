@@ -1,5 +1,20 @@
+const TZ_OFFSET = 8; // UTC+8
+
+export function nowLocal(): Date {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  return new Date(utc + TZ_OFFSET * 3600000);
+}
+
 export function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export function nowISO(): string {
+  return nowLocal().toISOString().replace("Z", `+0${TZ_OFFSET}:00`);
 }
 
 export function formatDateDisplay(dateStr: string): string {
@@ -13,11 +28,11 @@ export function formatDateShort(dateStr: string): string {
 }
 
 export function todayStr(): string {
-  return formatDate(new Date());
+  return formatDate(nowLocal());
 }
 
 export function getWeekDates(): { start: string; end: string } {
-  const now = new Date();
+  const now = nowLocal();
   const day = now.getDay();
   const monday = new Date(now);
   monday.setDate(now.getDate() - ((day + 6) % 7));
@@ -27,7 +42,7 @@ export function getWeekDates(): { start: string; end: string } {
 }
 
 export function getDaysAgo(days: number): string {
-  const d = new Date();
+  const d = nowLocal();
   d.setDate(d.getDate() - days);
   return formatDate(d);
 }

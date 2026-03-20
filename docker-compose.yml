@@ -9,6 +9,7 @@ services:
     environment:
       - DATABASE_URL=file:/app/data/gym.db
       - REDPILL_API_KEY=${REDPILL_API_KEY}
+      - TZ=Asia/Singapore
     restart: unless-stopped
 
 volumes:
