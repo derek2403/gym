@@ -1,0 +1,14 @@
+services:
+  gym:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - gym-data:/app/data
+    environment:
+      - DATABASE_URL=file:/app/data/gym.db
+      - REDPILL_API_KEY=${REDPILL_API_KEY}
+    restart: unless-stopped
+
+volumes:
+  gym-data:
