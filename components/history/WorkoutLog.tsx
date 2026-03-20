@@ -1,7 +1,14 @@
 import { useState } from "react";
 import Card from "@/components/ui/Card";
 import { ChevronDown, ChevronUp, Clock } from "lucide-react";
-import { formatDateDisplay } from "@/lib/utils";
+import { formatDateDisplay, formatDate } from "@/lib/utils";
+
+function toLocalDate(timestamp: string): string {
+  if (!timestamp.includes("T")) return timestamp;
+  const d = new Date(timestamp);
+  d.setHours(d.getHours() + 8);
+  return formatDate(d);
+}
 
 interface WorkoutSet {
   exerciseName: string;
@@ -49,7 +56,7 @@ export default function WorkoutLog({ workouts }: WorkoutLogProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-zinc-200">
-                  {formatDateDisplay(w.completedAt?.split("T")[0] || w.startedAt.split("T")[0])}
+                  {formatDateDisplay(toLocalDate(w.completedAt || w.startedAt))}
                 </p>
                 <p className="text-xs text-zinc-500">
                   {w.sets.length} sets · {Math.round(totalVolume)} kg volume

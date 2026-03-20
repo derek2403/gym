@@ -7,7 +7,7 @@ import CalorieRing from "@/components/calories/CalorieRing";
 import MacroBar from "@/components/calories/MacroBar";
 import ProfileSetup from "@/components/calories/ProfileSetup";
 import { Settings, ChevronLeft, ChevronRight, Trash2, Loader2, Sparkles, Camera, PenLine } from "lucide-react";
-import { todayStr, formatDateDisplay } from "@/lib/utils";
+import { todayStr, formatDateDisplay, formatDate, formatDateShort } from "@/lib/utils";
 import { calculateTDEE, calculateGoalCalories, getMacroTargets, type Sex, type ActivityLevel, type GoalType } from "@/lib/formulas";
 
 interface Profile {
@@ -31,7 +31,14 @@ interface FoodEntry {
   fatG: number;
 }
 
+interface WeeklyData {
+  byDate: Record<string, { calories: number; proteinG: number; carbsG: number; fatG: number }>;
+  totals: { calories: number; proteinG: number; carbsG: number; fatG: number };
+  entryCount: number;
+}
+
 type InputMode = "ai" | "camera" | "manual";
+type ViewMode = "daily" | "weekly";
 
 const MEAL_TYPES = ["breakfast", "lunch", "dinner", "snack"] as const;
 const MEAL_LABELS: Record<string, string> = {
@@ -40,6 +47,24 @@ const MEAL_LABELS: Record<string, string> = {
   dinner: "Dinner",
   snack: "Snacks",
 };
+
+function addDays(dateStr: string, days: number): string {
+  const parts = dateStr.split("-").map(Number);
+  const d = new Date(parts[0], parts[1] - 1, parts[2]);
+  d.setDate(d.getDate() + days);
+  return formatDate(d);
+}
+
+function getWeekRange(dateStr: string): { start: string; end: string } {
+  const parts = dateStr.split("-").map(Number);
+  const d = new Date(parts[0], parts[1] - 1, parts[2]);
+  const day = d.getDay(); // Sun=0
+  const sunday = new Date(d);
+  sunday.setDate(d.getDate() - day); // back to Sunday
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  return { start: formatDate(sunday), end: formatDate(saturday) };
+}
 
 export default function CaloriesPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -52,6 +77,8 @@ export default function CaloriesPage() {
   const [error, setError] = useState("");
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [inputMode, setInputMode] = useState<InputMode>("ai");
+  const [viewMode, setViewMode] = useState<ViewMode>("daily");
+  const [weeklyData, setWeeklyData] = useState<WeeklyData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Manual entry fields
@@ -74,13 +101,22 @@ export default function CaloriesPage() {
     setEntries(await res.json());
   }, [date]);
 
+  const weekRange = getWeekRange(date);
+
+  const fetchWeekly = useCallback(async () => {
+    const { start, end } = getWeekRange(date);
+    const res = await fetch(`/api/food/weekly?start=${start}&end=${end}`);
+    setWeeklyData(await res.json());
+  }, [date]);
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
   useEffect(() => {
-    fetchEntries();
-  }, [fetchEntries]);
+    if (viewMode === "daily") fetchEntries();
+    else fetchWeekly();
+  }, [viewMode, fetchEntries, fetchWeekly]);
 
   const saveProfile = async (data: {
     age: number;
@@ -143,6 +179,7 @@ export default function CaloriesPage() {
 
       setFoodInput("");
       fetchEntries();
+      fetchWeekly();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -196,6 +233,7 @@ export default function CaloriesPage() {
       });
 
       fetchEntries();
+      fetchWeekly();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -227,19 +265,24 @@ export default function CaloriesPage() {
     setManualCarbs("");
     setManualFat("");
     fetchEntries();
+    fetchWeekly();
   };
 
   const deleteEntry = async (id: number) => {
     await fetch(`/api/food?id=${id}`, { method: "DELETE" });
     fetchEntries();
+    fetchWeekly();
   };
 
   const navigateDate = (offset: number) => {
-    const d = new Date(date + "T00:00:00");
-    d.setDate(d.getDate() + offset);
-    setDate(d.toISOString().split("T")[0]);
+    if (viewMode === "weekly") {
+      setDate(addDays(date, offset * 7));
+    } else {
+      setDate(addDays(date, offset));
+    }
   };
 
+  // Daily totals
   const totals = entries.reduce(
     (acc, e) => ({
       calories: acc.calories + e.calories,
@@ -251,6 +294,7 @@ export default function CaloriesPage() {
   );
 
   const calorieTarget = profile?.calorieGoal || 2000;
+  const weeklyCalorieTarget = calorieTarget * 7;
   const macroTargets = profile
     ? getMacroTargets(calorieTarget, (profile.goalType || "maintenance") as GoalType)
     : { proteinG: 150, carbsG: 200, fatG: 67 };
@@ -287,215 +331,290 @@ export default function CaloriesPage() {
         }
       />
 
+      {/* View mode toggle */}
+      <div className="mb-4 flex gap-1 rounded-lg bg-zinc-800 p-0.5">
+        {(["daily", "weekly"] as ViewMode[]).map((mode) => (
+          <button
+            key={mode}
+            onClick={() => setViewMode(mode)}
+            className={`flex-1 rounded-md py-1.5 text-xs font-medium capitalize transition-colors ${
+              viewMode === mode ? "bg-zinc-700 text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            {mode}
+          </button>
+        ))}
+      </div>
+
       {/* Date navigation */}
       <div className="mb-4 flex items-center justify-between">
         <button onClick={() => navigateDate(-1)} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300">
           <ChevronLeft size={18} />
         </button>
         <span className="text-sm font-medium text-zinc-300">
-          {date === todayStr() ? "Today" : formatDateDisplay(date)}
+          {viewMode === "daily"
+            ? date === todayStr() ? "Today" : formatDateDisplay(date)
+            : `${formatDateShort(weekRange.start)} - ${formatDateShort(weekRange.end)}`
+          }
         </span>
         <button onClick={() => navigateDate(1)} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300">
           <ChevronRight size={18} />
         </button>
       </div>
 
-      {/* Calorie ring + macros */}
-      <Card className="mb-4">
-        <div className="relative flex justify-center py-2">
-          <CalorieRing consumed={Math.round(totals.calories)} target={calorieTarget} />
-        </div>
-        <div className="mt-4 space-y-3">
-          <MacroBar label="Protein" current={totals.protein} target={macroTargets.proteinG} color="#10b981" />
-          <MacroBar label="Carbs" current={totals.carbs} target={macroTargets.carbsG} color="#3b82f6" />
-          <MacroBar label="Fat" current={totals.fat} target={macroTargets.fatG} color="#f59e0b" />
-        </div>
-      </Card>
-
-      {/* Food input */}
-      <Card className="mb-4">
-        {/* Meal type selector */}
-        <div className="mb-3 flex gap-2">
-          {MEAL_TYPES.map((meal) => (
-            <button
-              key={meal}
-              onClick={() => setSelectedMeal(meal)}
-              className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
-                selectedMeal === meal
-                  ? "bg-emerald-500 text-zinc-950"
-                  : "bg-zinc-800 text-zinc-400"
-              }`}
-            >
-              {MEAL_LABELS[meal]}
-            </button>
-          ))}
-        </div>
-
-        {/* Input mode tabs */}
-        <div className="mb-3 flex gap-1 rounded-lg bg-zinc-800 p-0.5">
-          {([
-            { mode: "ai" as InputMode, label: "Type", icon: Sparkles },
-            { mode: "camera" as InputMode, label: "Scan", icon: Camera },
-            { mode: "manual" as InputMode, label: "Manual", icon: PenLine },
-          ]).map(({ mode, label, icon: Icon }) => (
-            <button
-              key={mode}
-              onClick={() => setInputMode(mode)}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-colors ${
-                inputMode === mode
-                  ? "bg-zinc-700 text-zinc-100"
-                  : "text-zinc-500 hover:text-zinc-300"
-              }`}
-            >
-              <Icon size={13} />
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* AI text input */}
-        {inputMode === "ai" && (
-          <div>
-            <div className="flex gap-2">
-              <input
-                className="flex-1 rounded-xl border border-zinc-700 bg-zinc-800 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-emerald-500"
-                placeholder="e.g., chicken breast 200g with rice"
-                value={foodInput}
-                onChange={(e) => setFoodInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !analyzing && analyzeAndAdd()}
-                disabled={analyzing}
-              />
-              <Button onClick={analyzeAndAdd} disabled={analyzing || !foodInput.trim()} size="md">
-                {analyzing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-              </Button>
+      {/* ===== WEEKLY VIEW ===== */}
+      {viewMode === "weekly" && weeklyData && (
+        <>
+          <Card className="mb-4">
+            <div className="relative flex justify-center py-2">
+              <CalorieRing consumed={Math.round(weeklyData.totals.calories)} target={weeklyCalorieTarget} />
             </div>
-            <p className="mt-1.5 text-[10px] text-zinc-600">AI estimates on the higher end for safety</p>
-          </div>
-        )}
-
-        {/* Camera / photo input */}
-        {inputMode === "camera" && (
-          <div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleImageCapture}
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={analyzing}
-              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-6 text-zinc-500 transition-colors hover:border-zinc-500 hover:text-zinc-300"
-            >
-              {analyzing ? (
-                <>
-                  <Loader2 size={24} className="animate-spin text-emerald-500" />
-                  <span className="text-sm">Analyzing...</span>
-                </>
-              ) : (
-                <>
-                  <Camera size={24} />
-                  <span className="text-sm">Take photo or choose from gallery</span>
-                </>
-              )}
-            </button>
-            <p className="mt-1.5 text-[10px] text-zinc-600">AI will estimate calories from the photo</p>
-          </div>
-        )}
-
-        {/* Manual input */}
-        {inputMode === "manual" && (
-          <div className="space-y-3">
-            <Input
-              placeholder="Food description"
-              value={manualDesc}
-              onChange={(e) => setManualDesc(e.target.value)}
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                label="Calories"
-                type="number"
-                placeholder="kcal"
-                value={manualCal}
-                onChange={(e) => setManualCal(e.target.value)}
-              />
-              <Input
-                label="Protein (g)"
-                type="number"
-                placeholder="0"
-                value={manualProtein}
-                onChange={(e) => setManualProtein(e.target.value)}
-              />
-              <Input
-                label="Carbs (g)"
-                type="number"
-                placeholder="0"
-                value={manualCarbs}
-                onChange={(e) => setManualCarbs(e.target.value)}
-              />
-              <Input
-                label="Fat (g)"
-                type="number"
-                placeholder="0"
-                value={manualFat}
-                onChange={(e) => setManualFat(e.target.value)}
-              />
-            </div>
-            <Button onClick={handleManualAdd} disabled={!manualDesc.trim() || !manualCal} size="sm">
-              Add entry
-            </Button>
-          </div>
-        )}
-
-        {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
-      </Card>
-
-      {/* Meal sections */}
-      {MEAL_TYPES.map((meal) => {
-        const mealEntries = entries.filter((e) => e.mealType === meal);
-        if (mealEntries.length === 0) return null;
-
-        const mealCals = mealEntries.reduce((sum, e) => sum + e.calories, 0);
-
-        return (
-          <Card key={meal} className="mb-3">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-zinc-200">{MEAL_LABELS[meal]}</h3>
-              <span className="font-mono text-xs text-zinc-500">{Math.round(mealCals)} kcal</span>
-            </div>
-            <div className="space-y-1.5">
-              {mealEntries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="flex items-center justify-between rounded-lg bg-zinc-800/50 px-3 py-2"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm text-zinc-200">{entry.description}</p>
-                    <p className="font-mono text-[10px] text-zinc-500">
-                      {Math.round(entry.calories)} kcal · {entry.proteinG}p · {entry.carbsG}c · {entry.fatG}f
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => deleteEntry(entry.id)}
-                    className="ml-2 p-1 text-zinc-600 transition-colors hover:text-red-400"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
+            <div className="mt-4 space-y-3">
+              <MacroBar label="Protein" current={weeklyData.totals.proteinG} target={macroTargets.proteinG * 7} color="#10b981" />
+              <MacroBar label="Carbs" current={weeklyData.totals.carbsG} target={macroTargets.carbsG * 7} color="#3b82f6" />
+              <MacroBar label="Fat" current={weeklyData.totals.fatG} target={macroTargets.fatG * 7} color="#f59e0b" />
             </div>
           </Card>
-        );
-      })}
 
-      {entries.length === 0 && (
-        <Card>
-          <p className="text-center text-sm text-zinc-500">
-            No food logged for this day. Type what you ate above.
-          </p>
-        </Card>
+          {/* Weekly deficit/surplus */}
+          <Card className="mb-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-zinc-200">Weekly summary</h3>
+              <span className="font-mono text-xs text-zinc-500">
+                {weeklyData.entryCount} entries
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-zinc-800/50 p-3 text-center">
+                <p className="font-mono text-lg font-bold text-zinc-100">
+                  {Math.round(weeklyData.totals.calories / 7)}
+                </p>
+                <p className="text-[10px] text-zinc-500">avg kcal/day</p>
+              </div>
+              <div className="rounded-xl bg-zinc-800/50 p-3 text-center">
+                {(() => {
+                  const diff = weeklyData.totals.calories - weeklyCalorieTarget;
+                  const over = diff > 0;
+                  return (
+                    <>
+                      <p className={`font-mono text-lg font-bold ${over ? "text-red-400" : "text-emerald-500"}`}>
+                        {over ? "+" : ""}{Math.round(diff)}
+                      </p>
+                      <p className="text-[10px] text-zinc-500">
+                        {over ? "surplus" : "deficit"} kcal
+                      </p>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Daily breakdown */}
+            <div className="mt-3 space-y-1.5">
+              {Array.from({ length: 7 }).map((_, i) => {
+                const dayDate = addDays(weekRange.start, i);
+                const dayData = weeklyData.byDate[dayDate];
+                const cals = dayData ? Math.round(dayData.calories) : 0;
+                const pct = calorieTarget > 0 ? Math.min((cals / calorieTarget) * 100, 100) : 0;
+                const dayLabel = new Date(dayDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "short" });
+                const isToday = dayDate === todayStr();
+
+                return (
+                  <div key={dayDate} className={`flex items-center gap-2 rounded-lg px-2 py-1.5 ${isToday ? "bg-zinc-800/50" : ""}`}>
+                    <span className={`w-8 text-[10px] font-medium ${isToday ? "text-emerald-500" : "text-zinc-500"}`}>
+                      {dayLabel}
+                    </span>
+                    <div className="flex-1">
+                      <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+                        <div
+                          className={`h-full rounded-full transition-all ${cals > calorieTarget ? "bg-red-400" : "bg-emerald-500"}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                    <span className="w-14 text-right font-mono text-[10px] text-zinc-400">
+                      {cals} kcal
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        </>
+      )}
+
+      {/* ===== DAILY VIEW ===== */}
+      {viewMode === "daily" && (
+        <>
+          {/* Calorie ring + macros */}
+          <Card className="mb-4">
+            <div className="relative flex justify-center py-2">
+              <CalorieRing consumed={Math.round(totals.calories)} target={calorieTarget} />
+            </div>
+            <div className="mt-4 space-y-3">
+              <MacroBar label="Protein" current={totals.protein} target={macroTargets.proteinG} color="#10b981" />
+              <MacroBar label="Carbs" current={totals.carbs} target={macroTargets.carbsG} color="#3b82f6" />
+              <MacroBar label="Fat" current={totals.fat} target={macroTargets.fatG} color="#f59e0b" />
+            </div>
+          </Card>
+
+          {/* Food input */}
+          <Card className="mb-4">
+            <div className="mb-3 flex gap-2">
+              {MEAL_TYPES.map((meal) => (
+                <button
+                  key={meal}
+                  onClick={() => setSelectedMeal(meal)}
+                  className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                    selectedMeal === meal
+                      ? "bg-emerald-500 text-zinc-950"
+                      : "bg-zinc-800 text-zinc-400"
+                  }`}
+                >
+                  {MEAL_LABELS[meal]}
+                </button>
+              ))}
+            </div>
+
+            <div className="mb-3 flex gap-1 rounded-lg bg-zinc-800 p-0.5">
+              {([
+                { mode: "ai" as InputMode, label: "Type", icon: Sparkles },
+                { mode: "camera" as InputMode, label: "Scan", icon: Camera },
+                { mode: "manual" as InputMode, label: "Manual", icon: PenLine },
+              ]).map(({ mode, label, icon: Icon }) => (
+                <button
+                  key={mode}
+                  onClick={() => setInputMode(mode)}
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-colors ${
+                    inputMode === mode
+                      ? "bg-zinc-700 text-zinc-100"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  <Icon size={13} />
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {inputMode === "ai" && (
+              <div>
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 rounded-xl border border-zinc-700 bg-zinc-800 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-emerald-500"
+                    placeholder="e.g., chicken breast 200g with rice"
+                    value={foodInput}
+                    onChange={(e) => setFoodInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && !analyzing && analyzeAndAdd()}
+                    disabled={analyzing}
+                  />
+                  <Button onClick={analyzeAndAdd} disabled={analyzing || !foodInput.trim()} size="md">
+                    {analyzing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                  </Button>
+                </div>
+                <p className="mt-1.5 text-[10px] text-zinc-600">AI estimates on the higher end for safety</p>
+              </div>
+            )}
+
+            {inputMode === "camera" && (
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleImageCapture}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={analyzing}
+                  className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-6 text-zinc-500 transition-colors hover:border-zinc-500 hover:text-zinc-300"
+                >
+                  {analyzing ? (
+                    <>
+                      <Loader2 size={24} className="animate-spin text-emerald-500" />
+                      <span className="text-sm">Analyzing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Camera size={24} />
+                      <span className="text-sm">Take photo or choose from gallery</span>
+                    </>
+                  )}
+                </button>
+                <p className="mt-1.5 text-[10px] text-zinc-600">AI will estimate calories from the photo</p>
+              </div>
+            )}
+
+            {inputMode === "manual" && (
+              <div className="space-y-3">
+                <Input
+                  placeholder="Food description"
+                  value={manualDesc}
+                  onChange={(e) => setManualDesc(e.target.value)}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input label="Calories" type="number" placeholder="kcal" value={manualCal} onChange={(e) => setManualCal(e.target.value)} />
+                  <Input label="Protein (g)" type="number" placeholder="0" value={manualProtein} onChange={(e) => setManualProtein(e.target.value)} />
+                  <Input label="Carbs (g)" type="number" placeholder="0" value={manualCarbs} onChange={(e) => setManualCarbs(e.target.value)} />
+                  <Input label="Fat (g)" type="number" placeholder="0" value={manualFat} onChange={(e) => setManualFat(e.target.value)} />
+                </div>
+                <Button onClick={handleManualAdd} disabled={!manualDesc.trim() || !manualCal} size="sm">
+                  Add entry
+                </Button>
+              </div>
+            )}
+
+            {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+          </Card>
+
+          {/* Meal sections */}
+          {MEAL_TYPES.map((meal) => {
+            const mealEntries = entries.filter((e) => e.mealType === meal);
+            if (mealEntries.length === 0) return null;
+
+            const mealCals = mealEntries.reduce((sum, e) => sum + e.calories, 0);
+
+            return (
+              <Card key={meal} className="mb-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-zinc-200">{MEAL_LABELS[meal]}</h3>
+                  <span className="font-mono text-xs text-zinc-500">{Math.round(mealCals)} kcal</span>
+                </div>
+                <div className="space-y-1.5">
+                  {mealEntries.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="flex items-center justify-between rounded-lg bg-zinc-800/50 px-3 py-2"
+                    >
+                      <div className="flex-1">
+                        <p className="text-sm text-zinc-200">{entry.description}</p>
+                        <p className="font-mono text-[10px] text-zinc-500">
+                          {Math.round(entry.calories)} kcal · {entry.proteinG}p · {entry.carbsG}c · {entry.fatG}f
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => deleteEntry(entry.id)}
+                        className="ml-2 p-1 text-zinc-600 transition-colors hover:text-red-400"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            );
+          })}
+
+          {entries.length === 0 && (
+            <Card>
+              <p className="text-center text-sm text-zinc-500">
+                No food logged for this day. Type what you ate above.
+              </p>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );

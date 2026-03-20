@@ -4,6 +4,16 @@ import { workouts, workoutSets } from "@/lib/schema";
 import { eq, isNotNull, sql, gte, and } from "drizzle-orm";
 import { getWeekDates, getDaysAgo, formatDate, nowLocal } from "@/lib/utils";
 
+// Convert a stored timestamp to UTC+8 date string
+function toLocalDate(timestamp: string): string {
+  const d = new Date(timestamp);
+  // If it's already a date-only string, return as-is
+  if (!timestamp.includes("T")) return timestamp;
+  // Add 8 hours for UTC+8
+  d.setHours(d.getHours() + 8);
+  return formatDate(d);
+}
+
 export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
   const { start: weekStart, end: weekEnd } = getWeekDates();
 
@@ -17,13 +27,13 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
 
   // Week sessions
   const weekSessions = allWorkouts.filter(
-    (w) => w.completedAt && w.completedAt >= weekStart && w.completedAt <= weekEnd + "T23:59:59"
+    (w) => w.completedAt && toLocalDate(w.completedAt) >= weekStart && toLocalDate(w.completedAt) <= weekEnd
   ).length;
 
   // Week sets
   const weekWorkoutIds = new Set(
     allWorkouts
-      .filter((w) => w.completedAt && w.completedAt >= weekStart && w.completedAt <= weekEnd + "T23:59:59")
+      .filter((w) => w.completedAt && toLocalDate(w.completedAt) >= weekStart && toLocalDate(w.completedAt) <= weekEnd)
       .map((w) => w.id)
   );
   const weekSets = allSets.filter((s) => weekWorkoutIds.has(s.workoutId));
@@ -48,7 +58,7 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
   const workoutDates = [...new Set(
     allWorkouts
       .filter((w) => w.completedAt)
-      .map((w) => w.completedAt!.split("T")[0])
+      .map((w) => toLocalDate(w.completedAt!))
   )].sort();
 
   let currentStreak = 0;
