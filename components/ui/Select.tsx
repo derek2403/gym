@@ -9,14 +9,14 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, options, className, ...props }, ref) => {
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         {label && (
-          <label className="text-xs font-medium text-zinc-400">{label}</label>
+          <label className="text-overline">{label}</label>
         )}
         <select
           ref={ref}
           className={cn(
-            "rounded-xl border border-zinc-700 bg-zinc-800 px-3.5 py-2.5 text-sm text-zinc-100 outline-none transition-colors focus:border-emerald-500",
+            "rounded-2xl bg-white/[0.06] px-4 py-3.5 text-[17px] tracking-tight text-white/90 outline-none transition-all duration-200 focus:bg-white/[0.1] focus:ring-1 focus:ring-white/[0.15]",
             className
           )}
           {...props}

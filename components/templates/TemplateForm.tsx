@@ -2,7 +2,7 @@ import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
-import { Plus, Trash2, GripVertical, Timer, ArrowDownUp } from "lucide-react";
+import { Plus, Trash2, Timer, ArrowDownUp } from "lucide-react";
 
 interface Exercise {
   exerciseName: string;
@@ -31,9 +31,7 @@ export default function TemplateForm({
   const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
 
   const updateExercise = (i: number, field: keyof Exercise, value: string | number) => {
-    setExercises((prev) =>
-      prev.map((e, idx) => (idx === i ? { ...e, [field]: value } : e))
-    );
+    setExercises((prev) => prev.map((e, idx) => (idx === i ? { ...e, [field]: value } : e)));
   };
 
   const addExercise = () => {
@@ -52,123 +50,65 @@ export default function TemplateForm({
     onSubmit(name, valid);
   };
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return m > 0 ? `${m}m${s > 0 ? ` ${s}s` : ""}` : `${s}s`;
-  };
-
   return (
-    <div className="space-y-4 animate-fade-in">
-      <Input
-        label="Template name"
-        placeholder="e.g., Push Day, Upper Body"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+    <div className="animate-fade-in space-y-4">
+      <Input label="Template name" placeholder="e.g., Push Day" value={name} onChange={(e) => setName(e.target.value)} />
 
       <div className="space-y-3">
-        <label className="text-xs font-medium text-zinc-400">Exercises</label>
+        <span className="text-overline">Exercises</span>
         {exercises.map((ex, i) => (
-          <div key={i}>
-            <Card className="flex items-start gap-3 p-3">
-              <GripVertical size={16} className="mt-2.5 shrink-0 text-zinc-600" />
-              <div className="flex-1 space-y-2">
+          <Card key={i} variant="subtle" className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-1 space-y-3">
                 <input
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-emerald-500"
+                  className="w-full rounded-xl bg-white/[0.06] px-3.5 py-3 text-[15px] text-white/90 placeholder:text-white/20 outline-none focus:bg-white/[0.1]"
                   placeholder="Exercise name"
                   value={ex.exerciseName}
                   onChange={(e) => updateExercise(i, "exerciseName", e.target.value)}
                 />
                 <div className="grid grid-cols-4 gap-2">
-                  <div>
-                    <span className="mb-1 block text-[10px] text-zinc-500">Sets</span>
-                    <input
-                      type="number"
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-center text-sm text-zinc-100 outline-none focus:border-emerald-500"
-                      value={ex.targetSets}
-                      onChange={(e) => updateExercise(i, "targetSets", Number(e.target.value))}
-                      min={1}
-                    />
-                  </div>
-                  <div>
-                    <span className="mb-1 block text-[10px] text-zinc-500">Reps</span>
-                    <input
-                      type="number"
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-center text-sm text-zinc-100 outline-none focus:border-emerald-500"
-                      value={ex.targetReps}
-                      onChange={(e) => updateExercise(i, "targetReps", Number(e.target.value))}
-                      min={1}
-                    />
-                  </div>
-                  <div>
-                    <span className="mb-1 flex items-center gap-1 text-[10px] text-zinc-500">
-                      <Timer size={8} />
-                      Rest (s)
-                    </span>
-                    <input
-                      type="number"
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-center text-sm text-zinc-100 outline-none focus:border-emerald-500"
-                      value={ex.restSeconds}
-                      onChange={(e) => updateExercise(i, "restSeconds", Number(e.target.value))}
-                      min={0}
-                      step={5}
-                    />
-                  </div>
-                  <div>
-                    <span className="mb-1 flex items-center gap-1 text-[10px] text-zinc-500">
-                      <ArrowDownUp size={8} />
-                      Next (s)
-                    </span>
-                    <input
-                      type="number"
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1.5 text-center text-sm text-zinc-100 outline-none focus:border-emerald-500"
-                      value={ex.intervalSeconds}
-                      onChange={(e) => updateExercise(i, "intervalSeconds", Number(e.target.value))}
-                      min={0}
-                      step={5}
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-3 text-[10px] text-zinc-500">
-                  <span>Rest between sets: {formatTime(ex.restSeconds)}</span>
-                  <span>Interval to next: {formatTime(ex.intervalSeconds)}</span>
+                  {[
+                    { label: "Sets", field: "targetSets" as const, val: ex.targetSets },
+                    { label: "Reps", field: "targetReps" as const, val: ex.targetReps },
+                    { label: "Rest", field: "restSeconds" as const, val: ex.restSeconds },
+                    { label: "Next", field: "intervalSeconds" as const, val: ex.intervalSeconds },
+                  ].map(({ label, field, val }) => (
+                    <div key={field}>
+                      <span className="mb-1 flex items-center gap-1 text-[10px] text-white/25">
+                        {field === "restSeconds" && <Timer size={8} />}
+                        {field === "intervalSeconds" && <ArrowDownUp size={8} />}
+                        {label}
+                      </span>
+                      <input
+                        type="number"
+                        className="w-full rounded-lg bg-white/[0.06] px-2 py-2 text-center text-[13px] text-white/80 outline-none focus:bg-white/[0.1]"
+                        value={val}
+                        onChange={(e) => updateExercise(i, field, Number(e.target.value))}
+                        min={field === "targetSets" || field === "targetReps" ? 1 : 0}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
-              <button
-                onClick={() => removeExercise(i)}
-                className="mt-2 p-1 text-zinc-600 transition-colors hover:text-red-400"
-              >
-                <Trash2 size={16} />
+              <button onClick={() => removeExercise(i)} className="mt-2 p-1.5 text-white/15 transition-colors hover:text-red-400">
+                <Trash2 size={15} />
               </button>
-            </Card>
-            {i < exercises.length - 1 && (
-              <div className="flex items-center justify-center py-1">
-                <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
-                  <ArrowDownUp size={10} />
-                  <span>{formatTime(ex.intervalSeconds)} transition</span>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          </Card>
         ))}
       </div>
 
       <button
         onClick={addExercise}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-3 text-sm text-zinc-500 transition-colors hover:border-zinc-500 hover:text-zinc-300"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-white/10 py-4 text-[13px] text-white/25 transition-colors hover:border-white/20 hover:text-white/40"
       >
-        <Plus size={16} />
+        <Plus size={15} />
         Add exercise
       </button>
 
       <div className="flex gap-3 pt-2">
-        <Button variant="secondary" onClick={onCancel} className="flex-1">
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} className="flex-1">
-          {submitLabel}
-        </Button>
+        <Button variant="glass" onClick={onCancel} className="flex-1">Cancel</Button>
+        <Button onClick={handleSubmit} className="flex-1">{submitLabel}</Button>
       </div>
     </div>
   );

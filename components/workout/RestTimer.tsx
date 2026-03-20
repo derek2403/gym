@@ -17,42 +17,29 @@ export default function RestTimer({ defaultSeconds = 90, autoStart = false }: Re
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [running, seconds]);
 
   useEffect(() => {
-    if (autoStart) {
-      setSeconds(defaultSeconds);
-      setRunning(true);
-    }
+    if (autoStart) { setSeconds(defaultSeconds); setRunning(true); }
   }, [autoStart, defaultSeconds]);
 
   const min = Math.floor(seconds / 60);
   const sec = seconds % 60;
   const pct = (seconds / defaultSeconds) * 100;
 
-  const reset = () => {
-    setSeconds(defaultSeconds);
-    setRunning(true);
-  };
-
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-zinc-800/50 px-3 py-2">
-      <Timer size={16} className={seconds === 0 ? "text-emerald-500" : "text-zinc-500"} />
+    <div className="glass flex items-center gap-3 rounded-2xl px-4 py-3">
+      <Timer size={16} className={seconds === 0 ? "text-emerald-400" : "text-white/30"} />
       <div className="flex-1">
-        <div className="h-1 overflow-hidden rounded-full bg-zinc-700">
-          <div
-            className="h-full rounded-full bg-emerald-500 transition-all duration-1000"
-            style={{ width: `${pct}%` }}
-          />
+        <div className="h-[5px] overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="h-full rounded-full bg-emerald-500 transition-all duration-1000" style={{ width: `${pct}%` }} />
         </div>
       </div>
-      <span className="font-mono text-sm text-zinc-300">
+      <span className="font-mono text-[17px] font-medium tracking-tight text-white/80">
         {min}:{sec.toString().padStart(2, "0")}
       </span>
-      <button onClick={reset} className="text-zinc-500 hover:text-zinc-300">
+      <button onClick={() => { setSeconds(defaultSeconds); setRunning(true); }} className="rounded-xl p-1.5 text-white/20 transition-colors hover:text-white/50">
         <RotateCcw size={14} />
       </button>
     </div>

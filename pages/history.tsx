@@ -7,161 +7,92 @@ import WorkoutLog from "@/components/history/WorkoutLog";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 interface Stats {
-  totalSessions: number;
-  totalCompletedSets: number;
-  totalVolume: number;
-  topLift: number;
-  topLiftExercise: string | null;
-  currentStreak: number;
-  bestStreak: number;
+  totalSessions: number; totalCompletedSets: number; totalVolume: number;
+  topLift: number; topLiftExercise: string | null;
+  currentStreak: number; bestStreak: number;
   calendarDays: { date: string; hasWorkout: boolean; dayOfWeek: number }[];
 }
 
-interface WorkoutSet {
-  exerciseName: string;
-  setNumber: number;
-  weightKg: number;
-  reps: number;
-  completedAt: string;
-}
-
 interface Workout {
-  id: number;
-  startedAt: string;
-  completedAt: string | null;
-  sets: WorkoutSet[];
+  id: number; startedAt: string; completedAt: string | null;
+  sets: { exerciseName: string; setNumber: number; weightKg: number; reps: number; completedAt: string }[];
 }
 
 export default function HistoryPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
-  const [selectedExercise, setSelectedExercise] = useState<string>("");
+  const [selectedExercise, setSelectedExercise] = useState("");
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/stats").then((r) => r.json()),
-      fetch("/api/workouts").then((r) => r.json()),
-    ]).then(([s, w]) => {
-      setStats(s);
-      setWorkouts(w.filter((wk: Workout) => wk.completedAt));
-    });
+    Promise.all([fetch("/api/stats").then((r) => r.json()), fetch("/api/workouts").then((r) => r.json())])
+      .then(([s, w]) => { setStats(s); setWorkouts(w.filter((wk: Workout) => wk.completedAt)); });
   }, []);
 
-  // All unique exercise names
-  const allExercises = [
-    ...new Set(workouts.flatMap((w) => w.sets.map((s) => s.exerciseName))),
-  ];
-
-  // Progression data for selected exercise
+  const allExercises = [...new Set(workouts.flatMap((w) => w.sets.map((s) => s.exerciseName)))];
   const progressionData = selectedExercise
-    ? workouts
-        .filter((w) => w.sets.some((s) => s.exerciseName === selectedExercise))
+    ? workouts.filter((w) => w.sets.some((s) => s.exerciseName === selectedExercise))
         .map((w) => {
-          const exSets = w.sets.filter((s) => s.exerciseName === selectedExercise);
-          const maxWeight = Math.max(...exSets.map((s) => s.weightKg));
-          const date = (w.completedAt || w.startedAt).split("T")[0];
-          return { date: date.slice(5), weight: maxWeight };
+          const maxWeight = Math.max(...w.sets.filter((s) => s.exerciseName === selectedExercise).map((s) => s.weightKg));
+          return { date: (w.completedAt || w.startedAt).split("T")[0].slice(5), weight: maxWeight };
         })
     : [];
 
-  if (!stats) return <div className="flex h-64 items-center justify-center text-zinc-500">Loading...</div>;
+  if (!stats) return <div className="flex h-64 items-center justify-center text-white/30">Loading...</div>;
 
   return (
-    <div>
-      <PageHeader
-        title="History"
-        subtitle="Your workouts, set-by-set progression, and PR context."
-      />
+    <div className="animate-fade-in">
+      <PageHeader title="History" subtitle="Progression and PR context." />
 
-      <div className="mb-4 grid grid-cols-3 gap-3">
+      <div className="mb-5 grid grid-cols-3 gap-3">
         <StatBox value={stats.totalSessions} label="Sessions" />
-        <StatBox value={stats.totalCompletedSets} label="Completed sets" />
+        <StatBox value={stats.totalCompletedSets} label="Sets" />
         <StatBox value={stats.totalVolume} label="Volume" />
       </div>
 
-      <Card className="mb-4">
+      <Card className="mb-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-semibold text-zinc-200">Top lift</p>
-            <p className="text-xs text-zinc-500">
-              {stats.topLiftExercise || "No completed set yet"}
-            </p>
+            <p className="text-title-sm text-white/90">Top lift</p>
+            <p className="text-caption mt-0.5">{stats.topLiftExercise || "No completed set yet"}</p>
           </div>
           <div className="text-right">
-            <p className="font-mono text-2xl font-bold text-zinc-50">
-              {stats.topLift.toFixed(1)}
-              <span className="text-sm font-normal text-zinc-500">kg</span>
+            <p className="font-mono text-[28px] font-bold tracking-tighter text-white">
+              {stats.topLift.toFixed(1)}<span className="text-[13px] font-normal text-white/25">kg</span>
             </p>
-            <p className="text-[10px] text-zinc-500">best recorded</p>
           </div>
         </div>
       </Card>
 
-      <Card className="mb-4">
+      <Card className="mb-5">
         <ConsistencyCalendar days={stats.calendarDays} />
       </Card>
 
-      <div className="mb-4 grid grid-cols-2 gap-3">
+      <div className="mb-5 grid grid-cols-2 gap-3">
         <StatBox value={stats.currentStreak} label="Current streak" />
         <StatBox value={stats.bestStreak} label="Best streak" />
       </div>
 
       {allExercises.length > 0 && (
-        <Card className="mb-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-zinc-200">Exercise progression</h3>
-            <select
-              value={selectedExercise}
-              onChange={(e) => setSelectedExercise(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-zinc-300 outline-none"
-            >
-              <option value="">Select exercise</option>
-              {allExercises.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
+        <Card className="mb-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-title-sm text-white/90">Progression</h3>
+            <select value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)}
+              className="rounded-xl bg-white/[0.06] px-3 py-1.5 text-[13px] text-white/60 outline-none">
+              <option value="">Select</option>
+              {allExercises.map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </div>
           {progressionData.length >= 2 ? (
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={progressionData}>
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 10, fill: "#71717a" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 10, fill: "#71717a" }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={35}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "#18181b",
-                    border: "1px solid #27272a",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                  labelStyle={{ color: "#a1a1aa" }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="weight"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  dot={{ fill: "#10b981", r: 3 }}
-                />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "rgba(255,255,255,0.2)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "rgba(255,255,255,0.2)" }} axisLine={false} tickLine={false} width={35} />
+                <Tooltip contentStyle={{ background: "rgba(255,255,255,0.08)", border: "0.5px solid rgba(255,255,255,0.1)", borderRadius: "12px", fontSize: "12px", backdropFilter: "blur(20px)" }} labelStyle={{ color: "rgba(255,255,255,0.4)" }} />
+                <Line type="monotone" dataKey="weight" stroke="#10b981" strokeWidth={2} dot={{ fill: "#10b981", r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <p className="py-6 text-center text-xs text-zinc-500">
-              {selectedExercise
-                ? "Need at least 2 workouts to show progression."
-                : "Select an exercise to see progression."}
-            </p>
+            <p className="py-8 text-center text-caption">{selectedExercise ? "Need 2+ workouts for chart." : "Select an exercise."}</p>
           )}
         </Card>
       )}

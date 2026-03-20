@@ -1,46 +1,62 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import {
-  Home,
-  Flame,
-  Dumbbell,
-  BarChart3,
-  LayoutGrid,
-  TrendingUp,
-} from "lucide-react";
+import { Home, Flame, BarChart3, TrendingUp, Dumbbell } from "lucide-react";
 
 const tabs = [
-  { href: "/", label: "Today", icon: Home },
+  { href: "/", label: "Home", icon: Home },
   { href: "/calories", label: "Calories", icon: Flame },
-  { href: "/workout", label: "Workout", icon: Dumbbell },
   { href: "/history", label: "History", icon: BarChart3 },
-  { href: "/templates", label: "Templates", icon: LayoutGrid },
   { href: "/track", label: "Track", icon: TrendingUp },
 ];
 
 export default function BottomNav() {
   const router = useRouter();
+  const isWorkoutActive = router.pathname === "/workout";
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-lg items-center justify-around px-1 py-1.5">
-        {tabs.map(({ href, label, icon: Icon }) => {
+    <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center px-6 pb-8">
+      <div className="relative flex w-full max-w-[360px] items-center rounded-full bg-[rgba(20,20,20,0.85)] px-1.5 py-1 shadow-[0_4px_24px_rgba(0,0,0,0.5)] ring-1 ring-white/[0.08] backdrop-blur-[60px] [-webkit-backdrop-filter:blur(60px)_saturate(180%)]">
+        {tabs.slice(0, 2).map(({ href, label, icon: Icon }) => {
           const active = router.pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 text-[10px] font-medium transition-colors ${
-                active
-                  ? "text-emerald-500"
-                  : "text-zinc-500 hover:text-zinc-300"
+              className={`flex flex-1 flex-col items-center gap-[3px] rounded-full py-2.5 transition-all duration-300 ${
+                active ? "text-white" : "text-white/30"
               }`}
             >
-              <Icon size={20} strokeWidth={active ? 2.5 : 1.5} />
-              <span>{label}</span>
-              {active && (
-                <span className="absolute bottom-0 h-0.5 w-8 rounded-full bg-emerald-500" />
-              )}
+              <Icon size={20} strokeWidth={active ? 2 : 1.5} />
+              <span className="text-[10px] font-medium tracking-tight">{label}</span>
+            </Link>
+          );
+        })}
+
+        <div className="flex flex-1 justify-center">
+          <Link
+            href="/workout"
+            className={`-mt-6 flex h-[54px] w-[54px] items-center justify-center rounded-full transition-all duration-300 active:scale-90 ${
+              isWorkoutActive
+                ? "bg-emerald-400 shadow-[0_4px_20px_rgba(16,185,129,0.4)]"
+                : "bg-emerald-500 shadow-[0_4px_16px_rgba(16,185,129,0.25)] hover:shadow-[0_4px_24px_rgba(16,185,129,0.4)]"
+            }`}
+          >
+            <Dumbbell size={22} strokeWidth={2.5} className="text-black" />
+          </Link>
+        </div>
+
+        {tabs.slice(2).map(({ href, label, icon: Icon }) => {
+          const active = router.pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex flex-1 flex-col items-center gap-[3px] rounded-full py-2.5 transition-all duration-300 ${
+                active ? "text-white" : "text-white/30"
+              }`}
+            >
+              <Icon size={20} strokeWidth={active ? 2 : 1.5} />
+              <span className="text-[10px] font-medium tracking-tight">{label}</span>
             </Link>
           );
         })}

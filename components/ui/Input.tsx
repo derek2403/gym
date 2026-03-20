@@ -8,14 +8,14 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, className, ...props }, ref) => {
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         {label && (
-          <label className="text-xs font-medium text-zinc-400">{label}</label>
+          <label className="text-overline">{label}</label>
         )}
         <input
           ref={ref}
           className={cn(
-            "rounded-xl border border-zinc-700 bg-zinc-800 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20",
+            "rounded-2xl bg-white/[0.06] px-4 py-3.5 text-[17px] tracking-tight text-white/90 placeholder:text-white/25 outline-none transition-all duration-200 focus:bg-white/[0.1] focus:ring-1 focus:ring-white/[0.15]",
             className
           )}
           {...props}
