@@ -14,7 +14,7 @@ interface Stats {
   topLiftExercise: string | null;
   currentStreak: number;
   bestStreak: number;
-  calendarDays: { date: string; hasWorkout: boolean }[];
+  calendarDays: { date: string; hasWorkout: boolean; dayOfWeek: number }[];
 }
 
 interface WorkoutSet {

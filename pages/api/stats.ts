@@ -89,11 +89,23 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
     }
   }
 
-  // 17-week calendar data
-  const calendarDays: { date: string; hasWorkout: boolean }[] = [];
-  for (let i = 17 * 7 - 1; i >= 0; i--) {
-    const d = getDaysAgo(i);
-    calendarDays.push({ date: d, hasWorkout: dateSet.has(d) });
+  // Calendar data: from first workout to today, Sun=0 top, Sat=6 bottom
+  const todayDate = new Date();
+  const firstWorkoutDate = workoutDates.length > 0
+    ? new Date(workoutDates[0] + "T00:00:00")
+    : todayDate;
+
+  // Align start to the Sunday of that week
+  const startDate = new Date(firstWorkoutDate);
+  startDate.setDate(startDate.getDate() - startDate.getDay()); // back to Sunday
+
+  const calendarDays: { date: string; hasWorkout: boolean; dayOfWeek: number }[] = [];
+  const totalDays = Math.floor((todayDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
+    const dateStr = formatDate(d);
+    calendarDays.push({ date: dateStr, hasWorkout: dateSet.has(dateStr), dayOfWeek: d.getDay() });
   }
 
   res.json({
