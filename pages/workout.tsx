@@ -109,7 +109,7 @@ export default function WorkoutPage() {
       <div className="animate-fade-in">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-title-md text-white">{activeTemplateName}</h1>
+            <h1 className="text-title-md text-black">{activeTemplateName}</h1>
             <p className="text-caption mt-1">{completedSets}/{sets.length} sets</p>
           </div>
           <div className="flex gap-2">
@@ -139,23 +139,23 @@ export default function WorkoutPage() {
               <div key={name}>
                 <Card className={allDone ? "opacity-40 transition-opacity duration-500" : ""}>
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-title-sm text-white/90">{name}</h3>
+                    <h3 className="text-title-sm text-black/85">{name}</h3>
                     {config && <span className="text-caption">Rest {fmt(config.restSeconds)}</span>}
                   </div>
-                  <div className="mb-3 grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 text-overline">
+                  <div className="mb-3 grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_2.25rem] gap-3 text-overline">
                     <span>Set</span><span>kg</span><span>Reps</span><span />
                   </div>
                   {exSets.map((set) => (
-                    <div key={set.oi} className={`mb-2 grid grid-cols-[2rem_1fr_1fr_2.5rem] items-center gap-2 ${set.completed ? "opacity-30" : ""}`}>
-                      <span className="text-center text-[14px] font-medium text-white/25">{set.setNumber}</span>
-                      <input type="number" className="rounded-xl bg-white/[0.06] px-3 py-3 text-center text-[17px] tracking-tight text-white/90 outline-none focus:bg-white/[0.1] focus:ring-1 focus:ring-white/[0.15]" value={set.weightKg || ""} onChange={(e) => updateSet(set.oi, "weightKg", Number(e.target.value))} disabled={set.completed} placeholder="0" />
-                      <input type="number" className="rounded-xl bg-white/[0.06] px-3 py-3 text-center text-[17px] tracking-tight text-white/90 outline-none focus:bg-white/[0.1] focus:ring-1 focus:ring-white/[0.15]" value={set.reps || ""} onChange={(e) => updateSet(set.oi, "reps", Number(e.target.value))} disabled={set.completed} placeholder="0" />
-                      <button onClick={() => completeSet(set.oi)} disabled={set.completed} className={`flex h-11 w-11 items-center justify-center rounded-xl transition-all duration-200 ${set.completed ? "bg-emerald-500/15 text-emerald-400" : "bg-white/[0.06] text-white/25 hover:bg-emerald-500 hover:text-black"}`}>
-                        <Check size={15} />
+                    <div key={set.oi} className={`mb-2 grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_2.25rem] items-center gap-3 ${set.completed ? "opacity-30" : ""}`}>
+                      <span className="text-center text-[14px] font-medium text-black/20">{set.setNumber}</span>
+                      <input type="number" className="rounded-xl bg-black/[0.04] px-2 py-2.5 text-center text-[15px] tracking-tight text-black/85 outline-none focus:bg-black/[0.06]" value={set.weightKg || ""} onChange={(e) => updateSet(set.oi, "weightKg", Number(e.target.value))} disabled={set.completed} placeholder="0" />
+                      <input type="number" className="rounded-xl bg-black/[0.04] px-2 py-2.5 text-center text-[15px] tracking-tight text-black/85 outline-none focus:bg-black/[0.06]" value={set.reps || ""} onChange={(e) => updateSet(set.oi, "reps", Number(e.target.value))} disabled={set.completed} placeholder="0" />
+                      <button onClick={() => completeSet(set.oi)} disabled={set.completed} className={`flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200 ${set.completed ? "bg-emerald-500/15 text-emerald-400" : "bg-black/[0.04] text-black/20 hover:bg-emerald-500 hover:text-black/70"}`}>
+                        <Check size={13} />
                       </button>
                     </div>
                   ))}
-                  <button onClick={() => addSet(name)} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-[13px] text-white/20 transition-colors hover:bg-white/[0.04] hover:text-white/40">
+                  <button onClick={() => addSet(name)} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-[13px] text-black/15 transition-colors hover:bg-black/[0.03] hover:text-black/70/35">
                     <Plus size={13} />Add set
                   </button>
                 </Card>
@@ -180,7 +180,7 @@ export default function WorkoutPage() {
       <div className="mb-6 flex gap-1 rounded-full glass-subtle p-1">
         {(["start", "templates"] as ViewMode[]).map((mode) => (
           <button key={mode} onClick={() => { setViewMode(mode); setShowForm(false); setEditingId(null); }}
-            className={`flex-1 rounded-full py-2.5 text-[13px] font-semibold tracking-tight transition-all duration-300 ${viewMode === mode ? "glass text-white" : "text-white/30"}`}>
+            className={`flex-1 rounded-full py-2.5 text-[13px] font-semibold tracking-tight transition-all duration-300 ${viewMode === mode ? "glass text-black" : "text-black/25"}`}>
             {mode === "start" ? "Start" : "Templates"}
           </button>
         ))}
@@ -195,8 +195,8 @@ export default function WorkoutPage() {
           </div>
           {templates.length === 0 ? (
             <Card className="py-16 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/[0.04]">
-                <Dumbbell size={24} className="text-white/20" />
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-black/[0.03]">
+                <Dumbbell size={24} className="text-black/15" />
               </div>
               <p className="text-caption">No templates yet</p>
               <Button size="sm" className="mt-5" onClick={() => { setViewMode("templates"); setShowForm(true); }}>Create template</Button>
@@ -209,7 +209,7 @@ export default function WorkoutPage() {
                     <Play size={20} className="text-emerald-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-title-sm text-white/90">{t.name}</h3>
+                    <h3 className="text-title-sm text-black/85">{t.name}</h3>
                     <p className="text-caption mt-0.5 truncate">{t.exercises.map((e) => e.exerciseName).join(" · ")}</p>
                   </div>
                 </div>
@@ -234,8 +234,8 @@ export default function WorkoutPage() {
             <div className="space-y-3">
               {templates.length === 0 ? (
                 <div className="py-16 text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.03]">
-                    <Dumbbell size={28} className="text-white/15" />
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-black/[0.02]">
+                    <Dumbbell size={28} className="text-black/10" />
                   </div>
                   <p className="text-caption">No templates yet</p>
                 </div>

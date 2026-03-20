@@ -14,11 +14,11 @@ export default function CalorieRing({ consumed, target }: CalorieRingProps) {
   return (
     <div className="flex flex-col items-center">
       <svg width="156" height="156" className="-rotate-90">
-        <circle cx="78" cy="78" r={radius} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="7" />
+        <circle cx="78" cy="78" r={radius} fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth="7" />
         <circle cx="78" cy="78" r={radius} fill="none" stroke={over ? "#f87171" : "#10b981"} strokeWidth="7" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={Math.max(offset, 0)} className="transition-all duration-700" />
       </svg>
       <div className="absolute mt-11 flex flex-col items-center">
-        <span className="font-mono text-[32px] font-bold tracking-tighter text-white">{consumed}</span>
+        <span className="font-mono text-[32px] font-bold tracking-tighter text-black">{consumed}</span>
         <span className="text-caption">of {target} kcal</span>
       </div>
       <p className={`mt-2 text-[13px] font-semibold tracking-tight ${over ? "text-red-400" : "text-emerald-400"}`}>

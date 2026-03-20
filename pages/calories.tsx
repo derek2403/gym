@@ -300,7 +300,7 @@ export default function CaloriesPage() {
     : { proteinG: 150, carbsG: 200, fatG: 67 };
 
   if (!profileLoaded) {
-    return <div className="flex h-64 items-center justify-center text-white/30">Loading...</div>;
+    return <div className="flex h-64 items-center justify-center text-black/25">Loading...</div>;
   }
 
   if (showSetup) {
@@ -324,7 +324,7 @@ export default function CaloriesPage() {
         action={
           <button
             onClick={() => setShowSetup(true)}
-            className="rounded-xl p-2 text-white/30 transition-colors hover:bg-white/[0.06] hover:text-white/70"
+            className="rounded-xl p-2 text-black/25 transition-colors hover:bg-black/[0.04] hover:text-black/70/65"
           >
             <Settings size={18} />
           </button>
@@ -332,13 +332,13 @@ export default function CaloriesPage() {
       />
 
       {/* View mode toggle */}
-      <div className="mb-4 flex gap-1 rounded-2xl bg-white/[0.06] p-0.5">
+      <div className="mb-4 flex gap-1 rounded-2xl bg-black/[0.04] p-0.5">
         {(["daily", "weekly"] as ViewMode[]).map((mode) => (
           <button
             key={mode}
             onClick={() => setViewMode(mode)}
             className={`flex-1 rounded-xl py-1.5 text-[13px] font-medium capitalize transition-colors ${
-              viewMode === mode ? "bg-white/[0.1] text-white/90" : "text-white/30 hover:text-white/70"
+              viewMode === mode ? "bg-black/[0.06] text-black/85" : "text-black/25 hover:text-black/70/65"
             }`}
           >
             {mode}
@@ -348,16 +348,16 @@ export default function CaloriesPage() {
 
       {/* Date navigation */}
       <div className="mb-4 flex items-center justify-between">
-        <button onClick={() => navigateDate(-1)} className="rounded-2xl p-2 text-white/30 hover:bg-white/[0.06] hover:text-white/70">
+        <button onClick={() => navigateDate(-1)} className="rounded-2xl p-2 text-black/25 hover:bg-black/[0.04] hover:text-black/70/65">
           <ChevronLeft size={18} />
         </button>
-        <span className="text-[15px] font-medium text-white/70">
+        <span className="text-[15px] font-medium text-black/65">
           {viewMode === "daily"
             ? date === todayStr() ? "Today" : formatDateDisplay(date)
             : `${formatDateShort(weekRange.start)} - ${formatDateShort(weekRange.end)}`
           }
         </span>
-        <button onClick={() => navigateDate(1)} className="rounded-2xl p-2 text-white/30 hover:bg-white/[0.06] hover:text-white/70">
+        <button onClick={() => navigateDate(1)} className="rounded-2xl p-2 text-black/25 hover:bg-black/[0.04] hover:text-black/70/65">
           <ChevronRight size={18} />
         </button>
       </div>
@@ -379,19 +379,19 @@ export default function CaloriesPage() {
           {/* Weekly deficit/surplus */}
           <Card className="mb-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold text-white/80">Weekly summary</h3>
-              <span className="font-mono text-[13px] text-white/30">
+              <h3 className="text-[15px] font-semibold text-black/75">Weekly summary</h3>
+              <span className="font-mono text-[13px] text-black/25">
                 {weeklyData.entryCount} entries
               </span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-white/[0.06]/50 p-3 text-center">
-                <p className="font-mono text-lg font-bold text-white/90">
+              <div className="rounded-xl bg-black/[0.04]/50 p-3 text-center">
+                <p className="font-mono text-lg font-bold text-black/85">
                   {Math.round(weeklyData.totals.calories / 7)}
                 </p>
-                <p className="text-[10px] text-white/30">avg kcal/day</p>
+                <p className="text-[10px] text-black/25">avg kcal/day</p>
               </div>
-              <div className="rounded-xl bg-white/[0.06]/50 p-3 text-center">
+              <div className="rounded-xl bg-black/[0.04]/50 p-3 text-center">
                 {(() => {
                   const diff = weeklyData.totals.calories - weeklyCalorieTarget;
                   const over = diff > 0;
@@ -400,7 +400,7 @@ export default function CaloriesPage() {
                       <p className={`font-mono text-lg font-bold ${over ? "text-red-400" : "text-emerald-500"}`}>
                         {over ? "+" : ""}{Math.round(diff)}
                       </p>
-                      <p className="text-[10px] text-white/30">
+                      <p className="text-[10px] text-black/25">
                         {over ? "surplus" : "deficit"} kcal
                       </p>
                     </>
@@ -420,19 +420,19 @@ export default function CaloriesPage() {
                 const isToday = dayDate === todayStr();
 
                 return (
-                  <div key={dayDate} className={`flex items-center gap-2 rounded-2xl px-2 py-1.5 ${isToday ? "bg-white/[0.06]/50" : ""}`}>
-                    <span className={`w-8 text-[10px] font-medium ${isToday ? "text-emerald-500" : "text-white/30"}`}>
+                  <div key={dayDate} className={`flex items-center gap-2 rounded-2xl px-2 py-1.5 ${isToday ? "bg-black/[0.04]/50" : ""}`}>
+                    <span className={`w-8 text-[10px] font-medium ${isToday ? "text-emerald-500" : "text-black/25"}`}>
                       {dayLabel}
                     </span>
                     <div className="flex-1">
-                      <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                      <div className="h-1.5 overflow-hidden rounded-full bg-black/[0.04]">
                         <div
                           className={`h-full rounded-full transition-all ${cals > calorieTarget ? "bg-red-400" : "bg-emerald-500"}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
                     </div>
-                    <span className="w-14 text-right font-mono text-[10px] text-white/40">
+                    <span className="w-14 text-right font-mono text-[10px] text-black/35">
                       {cals} kcal
                     </span>
                   </div>
@@ -468,7 +468,7 @@ export default function CaloriesPage() {
                   className={`rounded-2xl px-3 py-1 text-[13px] font-medium transition-colors ${
                     selectedMeal === meal
                       ? "bg-emerald-500 text-black"
-                      : "bg-white/[0.06] text-white/40"
+                      : "bg-black/[0.04] text-black/35"
                   }`}
                 >
                   {MEAL_LABELS[meal]}
@@ -476,7 +476,7 @@ export default function CaloriesPage() {
               ))}
             </div>
 
-            <div className="mb-3 flex gap-1 rounded-2xl bg-white/[0.06] p-0.5">
+            <div className="mb-3 flex gap-1 rounded-2xl bg-black/[0.04] p-0.5">
               {([
                 { mode: "ai" as InputMode, label: "Type", icon: Sparkles },
                 { mode: "camera" as InputMode, label: "Scan", icon: Camera },
@@ -487,8 +487,8 @@ export default function CaloriesPage() {
                   onClick={() => setInputMode(mode)}
                   className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-1.5 text-[13px] font-medium transition-colors ${
                     inputMode === mode
-                      ? "bg-white/[0.1] text-white/90"
-                      : "text-white/30 hover:text-white/70"
+                      ? "bg-black/[0.06] text-black/85"
+                      : "text-black/25 hover:text-black/70/65"
                   }`}
                 >
                   <Icon size={13} />
@@ -501,7 +501,7 @@ export default function CaloriesPage() {
               <div>
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 rounded-xl border border-white/[0.1] bg-white/[0.06] px-3.5 py-2.5 text-[15px] text-white/90 placeholder:text-white/30 outline-none focus:ring-1 focus:ring-white/[0.15]"
+                    className="flex-1 rounded-xl border border-black/[0.06] bg-black/[0.04] px-3.5 py-2.5 text-[15px] text-black/85 placeholder:text-black/25 outline-none focus:ring-1 focus:ring-black/[0.08]"
                     placeholder="e.g., chicken breast 200g with rice"
                     value={foodInput}
                     onChange={(e) => setFoodInput(e.target.value)}
@@ -512,7 +512,7 @@ export default function CaloriesPage() {
                     {analyzing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
                   </Button>
                 </div>
-                <p className="mt-1.5 text-[10px] text-white/20">AI estimates on the higher end for safety</p>
+                <p className="mt-1.5 text-[10px] text-black/15">AI estimates on the higher end for safety</p>
               </div>
             )}
 
@@ -529,7 +529,7 @@ export default function CaloriesPage() {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={analyzing}
-                  className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/[0.1] py-6 text-white/30 transition-colors hover:border-zinc-500 hover:text-white/70"
+                  className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-black/[0.06] py-6 text-black/25 transition-colors hover:border-zinc-500 hover:text-black/70/65"
                 >
                   {analyzing ? (
                     <>
@@ -543,7 +543,7 @@ export default function CaloriesPage() {
                     </>
                   )}
                 </button>
-                <p className="mt-1.5 text-[10px] text-white/20">AI will estimate calories from the photo</p>
+                <p className="mt-1.5 text-[10px] text-black/15">AI will estimate calories from the photo</p>
               </div>
             )}
 
@@ -579,24 +579,24 @@ export default function CaloriesPage() {
             return (
               <Card key={meal} className="mb-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-[15px] font-semibold text-white/80">{MEAL_LABELS[meal]}</h3>
-                  <span className="font-mono text-[13px] text-white/30">{Math.round(mealCals)} kcal</span>
+                  <h3 className="text-[15px] font-semibold text-black/75">{MEAL_LABELS[meal]}</h3>
+                  <span className="font-mono text-[13px] text-black/25">{Math.round(mealCals)} kcal</span>
                 </div>
                 <div className="space-y-1.5">
                   {mealEntries.map((entry) => (
                     <div
                       key={entry.id}
-                      className="flex items-center justify-between rounded-2xl bg-white/[0.06]/50 px-3 py-2"
+                      className="flex items-center justify-between rounded-2xl bg-black/[0.04]/50 px-3 py-2"
                     >
                       <div className="flex-1">
-                        <p className="text-[15px] text-white/80">{entry.description}</p>
-                        <p className="font-mono text-[10px] text-white/30">
+                        <p className="text-[15px] text-black/75">{entry.description}</p>
+                        <p className="font-mono text-[10px] text-black/25">
                           {Math.round(entry.calories)} kcal · {entry.proteinG}p · {entry.carbsG}c · {entry.fatG}f
                         </p>
                       </div>
                       <button
                         onClick={() => deleteEntry(entry.id)}
-                        className="ml-2 p-1 text-white/20 transition-colors hover:text-red-400"
+                        className="ml-2 p-1 text-black/15 transition-colors hover:text-red-400"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -609,7 +609,7 @@ export default function CaloriesPage() {
 
           {entries.length === 0 && (
             <Card>
-              <p className="text-center text-[15px] text-white/30">
+              <p className="text-center text-[15px] text-black/25">
                 No food logged for this day. Type what you ate above.
               </p>
             </Card>

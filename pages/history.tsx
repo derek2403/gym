@@ -18,6 +18,14 @@ interface Workout {
   sets: { exerciseName: string; setNumber: number; weightKg: number; reps: number; completedAt: string }[];
 }
 
+function formatStreak(days: number): string {
+  const weeks = Math.floor(days / 7);
+  const remainder = days % 7;
+  if (weeks === 0) return `${days}d`;
+  if (remainder === 0) return `${weeks}w`;
+  return `${weeks}w ${remainder}d`;
+}
+
 export default function HistoryPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
@@ -37,7 +45,7 @@ export default function HistoryPage() {
         })
     : [];
 
-  if (!stats) return <div className="flex h-64 items-center justify-center text-white/30">Loading...</div>;
+  if (!stats) return <div className="flex h-64 items-center justify-center text-black/25">Loading...</div>;
 
   return (
     <div className="animate-fade-in">
@@ -52,12 +60,12 @@ export default function HistoryPage() {
       <Card className="mb-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-title-sm text-white/90">Top lift</p>
+            <p className="text-title-sm text-black/85">Top lift</p>
             <p className="text-caption mt-0.5">{stats.topLiftExercise || "No completed set yet"}</p>
           </div>
           <div className="text-right">
-            <p className="font-mono text-[28px] font-bold tracking-tighter text-white">
-              {stats.topLift.toFixed(1)}<span className="text-[13px] font-normal text-white/25">kg</span>
+            <p className="font-mono text-[28px] font-bold tracking-tighter text-black">
+              {stats.topLift.toFixed(1)}<span className="text-[13px] font-normal text-black/20">kg</span>
             </p>
           </div>
         </div>
@@ -68,16 +76,16 @@ export default function HistoryPage() {
       </Card>
 
       <div className="mb-5 grid grid-cols-2 gap-3">
-        <StatBox value={stats.currentStreak} label="Current streak" />
-        <StatBox value={stats.bestStreak} label="Best streak" />
+        <StatBox value={formatStreak(stats.currentStreak)} label="Current streak" />
+        <StatBox value={formatStreak(stats.bestStreak)} label="Best streak" />
       </div>
 
       {allExercises.length > 0 && (
         <Card className="mb-5">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-title-sm text-white/90">Progression</h3>
+            <h3 className="text-title-sm text-black/85">Progression</h3>
             <select value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)}
-              className="rounded-xl bg-white/[0.06] px-3 py-1.5 text-[13px] text-white/60 outline-none">
+              className="rounded-xl bg-black/[0.04] px-3 py-1.5 text-[13px] text-black/50 outline-none">
               <option value="">Select</option>
               {allExercises.map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
@@ -85,9 +93,9 @@ export default function HistoryPage() {
           {progressionData.length >= 2 ? (
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={progressionData}>
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "rgba(255,255,255,0.2)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "rgba(255,255,255,0.2)" }} axisLine={false} tickLine={false} width={35} />
-                <Tooltip contentStyle={{ background: "rgba(255,255,255,0.08)", border: "0.5px solid rgba(255,255,255,0.1)", borderRadius: "12px", fontSize: "12px", backdropFilter: "blur(20px)" }} labelStyle={{ color: "rgba(255,255,255,0.4)" }} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "rgba(0,0,0,0.2)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "rgba(0,0,0,0.2)" }} axisLine={false} tickLine={false} width={35} />
+                <Tooltip contentStyle={{ background: "rgba(255,255,255,0.9)", border: "0.5px solid rgba(0,0,0,0.06)", borderRadius: "12px", fontSize: "12px", backdropFilter: "blur(20px)" }} labelStyle={{ color: "rgba(0,0,0,0.4)" }} />
                 <Line type="monotone" dataKey="weight" stroke="#10b981" strokeWidth={2} dot={{ fill: "#10b981", r: 3 }} />
               </LineChart>
             </ResponsiveContainer>

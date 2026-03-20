@@ -86,7 +86,7 @@ export default function TrackPage() {
             key={opt.value}
             onClick={() => setActiveType(opt.value)}
             className={`flex-1 rounded-full py-2.5 text-[13px] font-semibold tracking-tight transition-all duration-300 ${
-              activeType === opt.value ? "glass text-white" : "text-white/30"
+              activeType === opt.value ? "glass text-black" : "text-black/25"
             }`}
           >
             {opt.label}
@@ -96,7 +96,7 @@ export default function TrackPage() {
 
       {activeType === "body_fat" ? (
         <Card className="mb-5">
-          <h3 className="text-title-sm text-white/90">Body fat estimation</h3>
+          <h3 className="text-title-sm text-black/85">Body fat estimation</h3>
           <p className="text-caption mt-1 mb-4">U.S. Navy method. Enter measurements below.</p>
           <div className="grid grid-cols-2 gap-3">
             <Input label="Waist (cm)" type="number" step="0.1" placeholder="84.0" value={bfWaist} onChange={(e) => setBfWaist(e.target.value)} />
@@ -125,16 +125,16 @@ export default function TrackPage() {
 
       <Card className="mb-5">
         <div className="flex items-center justify-between">
-          <h3 className="text-title-sm text-white/90">Progress</h3>
+          <h3 className="text-title-sm text-black/85">Progress</h3>
           {metrics.length > 0 && <span className="text-caption">Latest: {metrics[0].value}{activeOption.unit}</span>}
         </div>
         {chartData.length >= 2 ? (
           <div className="mt-4">
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={chartData}>
-                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "rgba(255,255,255,0.2)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "rgba(255,255,255,0.2)" }} axisLine={false} tickLine={false} width={35} domain={["auto", "auto"]} />
-                <Tooltip contentStyle={{ background: "rgba(255,255,255,0.08)", border: "0.5px solid rgba(255,255,255,0.1)", borderRadius: "12px", fontSize: "12px", backdropFilter: "blur(20px)" }} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "rgba(0,0,0,0.2)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "rgba(0,0,0,0.2)" }} axisLine={false} tickLine={false} width={35} domain={["auto", "auto"]} />
+                <Tooltip contentStyle={{ background: "rgba(255,255,255,0.9)", border: "0.5px solid rgba(0,0,0,0.06)", borderRadius: "12px", fontSize: "12px", backdropFilter: "blur(20px)" }} />
                 <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} dot={{ fill: "#10b981", r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -145,18 +145,18 @@ export default function TrackPage() {
       </Card>
 
       <Card>
-        <h3 className="text-title-sm text-white/90 mb-4">Recent entries</h3>
+        <h3 className="text-title-sm text-black/85 mb-4">Recent entries</h3>
         {metrics.length === 0 ? (
           <p className="text-caption">No entries yet.</p>
         ) : (
           <div className="space-y-2">
             {metrics.slice(0, 10).map((m) => (
-              <div key={m.id} className="flex items-center justify-between rounded-2xl bg-white/[0.03] px-4 py-3">
+              <div key={m.id} className="flex items-center justify-between rounded-2xl bg-black/[0.02] px-4 py-3">
                 <div>
-                  <span className="font-mono text-[15px] font-medium text-white/80">{m.value}<span className="text-white/25">{activeOption.unit}</span></span>
+                  <span className="font-mono text-[15px] font-medium text-black/75">{m.value}<span className="text-black/20">{activeOption.unit}</span></span>
                   <span className="ml-3 text-caption">{formatDateShort(m.date)}</span>
                 </div>
-                <button onClick={() => handleDelete(m.id)} className="p-1.5 text-white/15 transition-colors hover:text-red-400">
+                <button onClick={() => handleDelete(m.id)} className="p-1.5 text-black/10 transition-colors hover:text-red-400">
                   <Trash2 size={14} />
                 </button>
               </div>

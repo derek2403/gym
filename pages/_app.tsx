@@ -15,7 +15,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="theme-color" content="#09090b" />
+        <meta name="theme-color" content="#f2f2f7" />
         <title>Gym Tracker</title>
       </Head>
       <Layout>

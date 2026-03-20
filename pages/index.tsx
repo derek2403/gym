@@ -28,7 +28,7 @@ export default function TodayPage() {
     <div className="animate-fade-in">
       <div className="mb-10">
         <p className="text-caption">{dateStr}</p>
-        <h1 className="text-title-lg mt-1 text-white">{greeting}</h1>
+        <h1 className="text-title-lg mt-1 text-black">{greeting}</h1>
       </div>
 
       <Card variant="tint" className="mb-6" onClick={() => router.push("/workout")}>
@@ -38,11 +38,11 @@ export default function TodayPage() {
               <Dumbbell size={22} className="text-emerald-400" />
             </div>
             <div>
-              <h3 className="text-title-sm text-white">Start workout</h3>
+              <h3 className="text-title-sm text-black">Start workout</h3>
               <p className="text-caption mt-0.5">Train with your templates</p>
             </div>
           </div>
-          <ChevronRight size={20} className="text-white/20" />
+          <ChevronRight size={20} className="text-black/15" />
         </div>
       </Card>
 
@@ -64,11 +64,11 @@ export default function TodayPage() {
                   <Icon size={18} className={color} />
                 </div>
                 <div>
-                  <h3 className="text-title-sm text-white/90">{label}</h3>
+                  <h3 className="text-title-sm text-black/85">{label}</h3>
                   <p className="text-caption mt-0.5">{desc}</p>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-white/15" />
+              <ChevronRight size={18} className="text-black/10" />
             </div>
           </Card>
         ))}

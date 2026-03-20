@@ -20,7 +20,7 @@ export default function Card({ children, className, onClick, variant = "default"
     <div
       onClick={onClick}
       className={cn(
-        "rounded-[20px] p-5",
+        "rounded-[20px] p-4",
         variants[variant],
         onClick && "cursor-pointer transition-transform duration-200 active:scale-[0.98]",
         className

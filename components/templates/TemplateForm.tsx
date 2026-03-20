@@ -61,7 +61,7 @@ export default function TemplateForm({
             <div className="flex items-start gap-3">
               <div className="flex-1 space-y-3">
                 <input
-                  className="w-full rounded-xl bg-white/[0.06] px-3.5 py-3 text-[15px] text-white/90 placeholder:text-white/20 outline-none focus:bg-white/[0.1]"
+                  className="w-full rounded-xl bg-black/[0.04] px-3.5 py-3 text-[15px] text-black/85 placeholder:text-black/15 outline-none focus:bg-black/[0.06]"
                   placeholder="Exercise name"
                   value={ex.exerciseName}
                   onChange={(e) => updateExercise(i, "exerciseName", e.target.value)}
@@ -74,14 +74,14 @@ export default function TemplateForm({
                     { label: "Next", field: "intervalSeconds" as const, val: ex.intervalSeconds },
                   ].map(({ label, field, val }) => (
                     <div key={field}>
-                      <span className="mb-1 flex items-center gap-1 text-[10px] text-white/25">
+                      <span className="mb-1 flex items-center gap-1 text-[10px] text-black/20">
                         {field === "restSeconds" && <Timer size={8} />}
                         {field === "intervalSeconds" && <ArrowDownUp size={8} />}
                         {label}
                       </span>
                       <input
                         type="number"
-                        className="w-full rounded-lg bg-white/[0.06] px-2 py-2 text-center text-[13px] text-white/80 outline-none focus:bg-white/[0.1]"
+                        className="w-full rounded-lg bg-black/[0.04] px-2 py-2 text-center text-[13px] text-black/75 outline-none focus:bg-black/[0.06]"
                         value={val}
                         onChange={(e) => updateExercise(i, field, Number(e.target.value))}
                         min={field === "targetSets" || field === "targetReps" ? 1 : 0}
@@ -90,7 +90,7 @@ export default function TemplateForm({
                   ))}
                 </div>
               </div>
-              <button onClick={() => removeExercise(i)} className="mt-2 p-1.5 text-white/15 transition-colors hover:text-red-400">
+              <button onClick={() => removeExercise(i)} className="mt-2 p-1.5 text-black/10 transition-colors hover:text-red-400">
                 <Trash2 size={15} />
               </button>
             </div>
@@ -100,7 +100,7 @@ export default function TemplateForm({
 
       <button
         onClick={addExercise}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-white/10 py-4 text-[13px] text-white/25 transition-colors hover:border-white/20 hover:text-white/40"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-black/8 py-4 text-[13px] text-black/20 transition-colors hover:border-black/10 hover:text-black/70/35"
       >
         <Plus size={15} />
         Add exercise

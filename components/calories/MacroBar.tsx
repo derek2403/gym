@@ -12,12 +12,12 @@ export default function MacroBar({ label, current, target, color, unit = "g" }: 
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[13px] font-medium text-white/50">{label}</span>
-        <span className="font-mono text-[13px] text-white/70">
-          {Math.round(current)}<span className="text-white/25">/{target}{unit}</span>
+        <span className="text-[13px] font-medium text-black/40">{label}</span>
+        <span className="font-mono text-[13px] text-black/65">
+          {Math.round(current)}<span className="text-black/20">/{target}{unit}</span>
         </span>
       </div>
-      <div className="h-[5px] overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="h-[5px] overflow-hidden rounded-full bg-black/[0.04]">
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
     </div>
