@@ -20,12 +20,35 @@ interface SetEntry {
 
 type ViewMode = "start" | "templates";
 
+const WORKOUT_STORAGE_KEY = "gym_active_workout";
+
+interface WorkoutState {
+  activeWorkoutId: number;
+  activeTemplateName: string;
+  activeExercises: TemplateExercise[];
+  sets: SetEntry[];
+}
+
+function saveWorkoutState(state: WorkoutState | null) {
+  if (state) localStorage.setItem(WORKOUT_STORAGE_KEY, JSON.stringify(state));
+  else localStorage.removeItem(WORKOUT_STORAGE_KEY);
+}
+
+function loadWorkoutState(): WorkoutState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(WORKOUT_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 export default function WorkoutPage() {
+  const saved = loadWorkoutState();
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [activeWorkoutId, setActiveWorkoutId] = useState<number | null>(null);
-  const [activeTemplateName, setActiveTemplateName] = useState("");
-  const [activeExercises, setActiveExercises] = useState<TemplateExercise[]>([]);
-  const [sets, setSets] = useState<SetEntry[]>([]);
+  const [activeWorkoutId, setActiveWorkoutId] = useState<number | null>(saved?.activeWorkoutId ?? null);
+  const [activeTemplateName, setActiveTemplateName] = useState(saved?.activeTemplateName ?? "");
+  const [activeExercises, setActiveExercises] = useState<TemplateExercise[]>(saved?.activeExercises ?? []);
+  const [sets, setSets] = useState<SetEntry[]>(saved?.sets ?? []);
   const [restDuration, setRestDuration] = useState(90);
   const [restTrigger, setRestTrigger] = useState(0);
   const [intervalTimer, setIntervalTimer] = useState<{ exerciseName: string; seconds: number } | null>(null);
@@ -33,6 +56,13 @@ export default function WorkoutPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("start");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  // Persist workout state on every change
+  useEffect(() => {
+    if (activeWorkoutId) {
+      saveWorkoutState({ activeWorkoutId, activeTemplateName, activeExercises, sets });
+    }
+  }, [activeWorkoutId, activeTemplateName, activeExercises, sets]);
 
   const fetchData = useCallback(async () => {
     const [tRes, sRes] = await Promise.all([fetch("/api/templates"), fetch("/api/stats")]);
@@ -85,13 +115,13 @@ export default function WorkoutPage() {
   const finishWorkout = async () => {
     if (!activeWorkoutId) return;
     await fetch(`/api/workouts/${activeWorkoutId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
-    setActiveWorkoutId(null); setSets([]); setActiveTemplateName(""); setActiveExercises([]); setIntervalTimer(null); fetchData();
+    setActiveWorkoutId(null); setSets([]); setActiveTemplateName(""); setActiveExercises([]); setIntervalTimer(null); saveWorkoutState(null); fetchData();
   };
 
   const cancelWorkout = async () => {
     if (!activeWorkoutId) return;
     await fetch(`/api/workouts/${activeWorkoutId}`, { method: "DELETE" });
-    setActiveWorkoutId(null); setSets([]); setActiveTemplateName(""); setActiveExercises([]); setIntervalTimer(null);
+    setActiveWorkoutId(null); setSets([]); setActiveTemplateName(""); setActiveExercises([]); setIntervalTimer(null); saveWorkoutState(null);
   };
 
   const handleCreate = async (name: string, exercises: any[]) => { await fetch("/api/templates", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, exercises }) }); setShowForm(false); fetchData(); };
