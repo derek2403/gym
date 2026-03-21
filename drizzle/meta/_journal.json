@@ -15,6 +15,13 @@
       "when": 1774041158639,
       "tag": "0001_striped_ezekiel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774078350569,
+      "tag": "0002_milky_bastion",
+      "breakpoints": true
     }
   ]
 }

@@ -4,6 +4,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import StatBox from "@/components/ui/StatBox";
 import { Dumbbell, BarChart3, TrendingUp, ChevronRight } from "lucide-react";
+import { useAuth } from "./_app";
 
 interface Stats {
   weekSessions: number;
@@ -13,6 +14,8 @@ interface Stats {
 
 export default function TodayPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const firstName = user?.name?.split(" ")[0] || "";
   const [stats, setStats] = useState<Stats>({ weekSessions: 0, weekCompletedSets: 0, topLiftWeek: 0 });
 
   useEffect(() => {
@@ -28,7 +31,7 @@ export default function TodayPage() {
     <div className="animate-fade-in">
       <div className="mb-10">
         <p className="text-caption">{dateStr}</p>
-        <h1 className="text-title-lg mt-1 text-black">{greeting}</h1>
+        <h1 className="text-title-lg mt-1 text-black">{greeting}, {firstName}</h1>
       </div>
 
       <Card variant="tint" className="mb-6" onClick={() => router.push("/workout")}>
