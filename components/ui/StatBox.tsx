@@ -12,7 +12,7 @@ export default function StatBox({ value, label, unit }: StatBoxProps) {
       <span className="text-metric text-[1.5rem] leading-none">
         {value}
         {unit && (
-          <span className="ml-0.5 text-[0.75rem] font-normal tracking-normal text-[color:var(--ink-quaternary)]">
+          <span className="ml-1 text-[0.75rem] font-normal tracking-normal text-[color:var(--ink-quaternary)]">
             {unit}
           </span>
         )}

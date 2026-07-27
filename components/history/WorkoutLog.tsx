@@ -47,7 +47,7 @@ export default function WorkoutLog({ workouts }: { workouts: Workout[] }) {
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                         {exSets.map((s, i) => (
                           <span key={i} className="rounded-full bg-[rgba(120,120,128,0.09)] px-2.5 py-1 tabular-nums text-[11px] text-[color:var(--ink-tertiary)]">
-                            {s.weightKg}kg x {s.reps}
+                            {s.weightKg} kg × {s.reps}
                           </span>
                         ))}
                       </div>

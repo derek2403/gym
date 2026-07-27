@@ -56,13 +56,13 @@ export default function ProfileSetup({ initial, onSave, submitRef }: ProfileSetu
           not silently swallowed. */}
       {attempted && missing && <p id="profile-errors" role="alert" className="text-[0.8125rem] text-red-500">Age, height and weight are needed to calculate your target.</p>}
       <Select label="Activity" value={activity} onChange={(e) => setActivity(e.target.value)} options={[
-        { value: "sedentary", label: "Sedentary (desk job)" }, { value: "light", label: "Light (1-2x/week)" },
-        { value: "moderate", label: "Moderate (3-5x/week)" }, { value: "active", label: "Active (6-7x/week)" },
-        { value: "very_active", label: "Very Active (2x/day)" },
+        { value: "sedentary", label: "Sedentary (desk job)" }, { value: "light", label: "Light (1–2×/week)" },
+        { value: "moderate", label: "Moderate (3–5×/week)" }, { value: "active", label: "Active (6–7×/week)" },
+        { value: "very_active", label: "Very Active (2×/day)" },
       ]} />
       <Select label="Goal" value={goal} onChange={(e) => setGoal(e.target.value)} options={[
-        { value: "aggressive_cut", label: "Aggressive Cut (-1000 cal)" }, { value: "cut", label: "Cut (-500 cal)" },
-        { value: "maintenance", label: "Maintenance" }, { value: "bulk", label: "Bulk (+300 cal)" },
+        { value: "aggressive_cut", label: "Aggressive Cut (−1,000 kcal)" }, { value: "cut", label: "Cut (−500 kcal)" },
+        { value: "maintenance", label: "Maintenance" }, { value: "bulk", label: "Bulk (+300 kcal)" },
       ]} />
     </div>
   );

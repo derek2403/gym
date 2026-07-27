@@ -46,9 +46,11 @@ const METRIC_OPTIONS: { value: MetricType; label: string; unit: string; placehol
 function formatStreak(days: number): string {
   const weeks = Math.floor(days / 7);
   const remainder = days % 7;
-  if (weeks === 0) return `${days}d`;
-  if (remainder === 0) return `${weeks}w`;
-  return `${weeks}w ${remainder}d`;
+  // Narrow no-break space between value and unit: units are not suffixes
+  // glued to digits, and the pair must never wrap apart.
+  if (weeks === 0) return `${days} d`;
+  if (remainder === 0) return `${weeks} w`;
+  return `${weeks} w ${remainder} d`;
 }
 
 export default function ProgressPage() {
@@ -183,7 +185,7 @@ export default function ProgressPage() {
               <div className="mb-5 grid grid-cols-3 gap-3">
                 <StatBox value={stats.totalSessions} label="Sessions" />
                 <StatBox value={stats.totalCompletedSets} label="Sets" />
-                <StatBox value={stats.totalVolume} label="Volume" />
+                <StatBox value={stats.totalVolume.toLocaleString()} label="Volume" unit="kg" />
               </div>
 
               <Card className="mb-5">
@@ -194,7 +196,7 @@ export default function ProgressPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-metric text-[1.75rem]">
-                      {stats.topLift.toFixed(1)}<span className="text-[13px] font-normal text-[color:var(--ink-quaternary)]">kg</span>
+                      {stats.topLift.toFixed(1)}<span className="ml-1 text-[13px] font-normal tracking-normal text-[color:var(--ink-quaternary)]">kg</span>
                     </p>
                   </div>
                 </div>
@@ -296,7 +298,7 @@ export default function ProgressPage() {
           <Card className="mb-5">
             <div className="flex items-center justify-between">
               <h3 className="text-title-sm text-[color:var(--ink)]">Progress</h3>
-              {metrics.length > 0 && <span className="text-caption">Latest: {metrics[0].value}{activeOption.unit}</span>}
+              {metrics.length > 0 && <span className="text-caption">Latest: {metrics[0].value} {activeOption.unit}</span>}
             </div>
             {chartData.length >= 2 ? (
               <div className="mt-4">
@@ -321,11 +323,11 @@ export default function ProgressPage() {
             ) : (
               <div className="space-y-2">
                 {metrics.slice(0, 10).map((m) => (
-                  <SwipeRow key={m.id} label={`${m.value}${activeOption.unit} on ${formatDateShort(m.date)}`} onDelete={() => handleDelete(m.id)}>
+                  <SwipeRow key={m.id} label={`${m.value} ${activeOption.unit} on ${formatDateShort(m.date)}`} onDelete={() => handleDelete(m.id)}>
                     <div className="flex items-center justify-between rounded-[0.875rem] bg-[rgba(120,120,128,0.08)] px-4 py-3">
                       <span className="tabular-nums text-[0.9375rem] font-medium text-[color:var(--ink)]">
                         {m.value}
-                        <span className="text-[color:var(--ink-quaternary)]">{activeOption.unit}</span>
+                        <span className="ml-0.5 tracking-normal text-[color:var(--ink-quaternary)]">{activeOption.unit}</span>
                       </span>
                       <span className="text-caption">{formatDateShort(m.date)}</span>
                     </div>

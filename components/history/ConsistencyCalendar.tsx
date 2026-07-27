@@ -49,9 +49,9 @@ export default function ConsistencyCalendar({ days }: ConsistencyCalendarProps) 
             const workoutDays = days.filter((d) => d.hasWorkout).length;
             const w = Math.floor(workoutDays / 7);
             const d = workoutDays % 7;
-            if (w === 0) return `${workoutDays}d`;
-            if (d === 0) return `${w}w`;
-            return `${w}w, ${d}d`;
+            if (w === 0) return `${workoutDays} d`;
+            if (d === 0) return `${w} w`;
+            return `${w} w ${d} d`;
           })()}
         </span>
       </div>
