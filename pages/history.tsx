@@ -45,7 +45,7 @@ export default function HistoryPage() {
         })
     : [];
 
-  if (!stats) return <div className="flex h-64 items-center justify-center text-black/25">Loading...</div>;
+  if (!stats) return <div className="flex h-64 items-center justify-center text-[color:var(--ink-quaternary)]">Loading...</div>;
 
   return (
     <div className="animate-fade-in">
@@ -60,12 +60,12 @@ export default function HistoryPage() {
       <Card className="mb-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-title-sm text-black/85">Top lift</p>
+            <p className="text-title-sm text-[color:var(--ink)]">Top lift</p>
             <p className="text-caption mt-0.5">{stats.topLiftExercise || "No completed set yet"}</p>
           </div>
           <div className="text-right">
-            <p className="font-mono text-[28px] font-bold tracking-tighter text-black">
-              {stats.topLift.toFixed(1)}<span className="text-[13px] font-normal text-black/20">kg</span>
+            <p className="text-metric text-[1.75rem]">
+              {stats.topLift.toFixed(1)}<span className="text-[13px] font-normal text-[color:var(--ink-quaternary)]">kg</span>
             </p>
           </div>
         </div>
@@ -83,9 +83,9 @@ export default function HistoryPage() {
       {allExercises.length > 0 && (
         <Card className="mb-5">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-title-sm text-black/85">Progression</h3>
+            <h3 className="text-title-sm text-[color:var(--ink)]">Progression</h3>
             <select value={selectedExercise} onChange={(e) => setSelectedExercise(e.target.value)}
-              className="rounded-xl bg-black/[0.04] px-3 py-1.5 text-[13px] text-black/50 outline-none">
+              className="rounded-xl bg-[rgba(120,120,128,0.09)] px-3 py-1.5 text-[13px] text-[color:var(--ink-secondary)] outline-none">
               <option value="">Select</option>
               {allExercises.map((n) => <option key={n} value={n}>{n}</option>)}
             </select>

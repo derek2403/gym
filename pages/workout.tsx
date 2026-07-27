@@ -147,25 +147,34 @@ export default function WorkoutPage() {
   const fmt = (s: number) => { const m = Math.floor(s / 60); const r = s % 60; return m > 0 ? `${m}m${r > 0 ? ` ${r}s` : ""}` : `${r}s`; };
   // Amber = short of the range, emerald = topped it out (time to add weight).
   const repTone = (reps: number, cfg?: TemplateExercise) => {
-    if (!cfg || !reps) return "text-black/85";
+    if (!cfg || !reps) return "text-[color:var(--ink)]";
     if (reps < cfg.targetRepsMin) return "text-amber-500";
     if (reps >= cfg.targetRepsMax) return "text-emerald-500";
-    return "text-black/85";
+    return "text-[color:var(--ink)]";
   };
 
   // ===== ACTIVE WORKOUT =====
   if (activeWorkoutId) {
     return (
       <div className="animate-fade-in">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-title-md text-black">{activeTemplateName}</h1>
-            <p className="text-caption mt-1">{completedSets}/{sets.length} sets</p>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-title-lg truncate">{activeTemplateName}</h1>
+            <p className="text-caption mt-1 tabular-nums">{completedSets} of {sets.length} sets done</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={cancelWorkout}><X size={16} /></Button>
+          <div className="flex shrink-0 gap-2">
+            <Button variant="ghost" size="sm" aria-label="Cancel workout" onClick={cancelWorkout}><X size={16} /></Button>
             <Button size="sm" onClick={finishWorkout}><Check size={16} />Finish</Button>
           </div>
+        </div>
+
+        {/* Session progress, so the header answers "how far in am I?" without
+            counting rows. */}
+        <div className="mb-5 h-1 overflow-hidden rounded-full bg-[rgba(120,120,128,0.12)]">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-[width] duration-[var(--response-slow)] ease-[var(--ease-settle)]"
+            style={{ width: `${sets.length ? (completedSets / sets.length) * 100 : 0}%` }}
+          />
         </div>
 
         {restTrigger > 0 && (
@@ -187,33 +196,79 @@ export default function WorkoutPage() {
             const allDone = exSets.every((s) => s.completed);
             return (
               <div key={name}>
-                <Card className={allDone ? "opacity-40 transition-opacity duration-500" : ""}>
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-title-sm text-black/85">{name}</h3>
-                    {config && <span className="text-caption">Rest {fmt(config.restSeconds)}</span>}
+                <Card className={`p-5 transition-opacity duration-[var(--response-slow)] ease-[var(--ease-settle)] ${allDone ? "opacity-45" : ""}`}>
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <h3 className="text-title-sm on-material min-w-0 truncate">{name}</h3>
+                    {config && <span className="text-caption shrink-0">Rest {fmt(config.restSeconds)}</span>}
                   </div>
-                  <div className="mb-3 grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_2.25rem] gap-3 text-overline">
-                    <span>Set</span><span>kg</span>
-                    <span>Reps{config && <span className="ml-1 normal-case text-black/15">target {formatRepRange(config.targetRepsMin, config.targetRepsMax)}</span>}</span>
+                  {/* Labels sit centred over the fields they name — a label
+                      that doesn't line up with its column has to be re-read. */}
+                  <div className="mb-2 grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_2.25rem] items-baseline gap-3 text-overline">
+                    <span className="text-center">Set</span>
+                    <span className="text-center">kg</span>
+                    <span className="text-center">
+                      Reps
+                      {config && (
+                        <span className="ml-1 normal-case tracking-normal text-[color:var(--ink-quaternary)]">
+                          {formatRepRange(config.targetRepsMin, config.targetRepsMax)}
+                        </span>
+                      )}
+                    </span>
                     <span />
                   </div>
                   {exSets.map((set) => (
-                    <div key={set.oi} className={`mb-2 grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_2.25rem] items-center gap-3 ${set.completed ? "opacity-30" : ""}`}>
-                      <span className="text-center text-[14px] font-medium text-black/20">{set.setNumber}</span>
-                      <input type="number" className="rounded-xl bg-black/[0.04] px-2 py-2.5 text-center text-[15px] tracking-tight text-black/85 outline-none focus:bg-black/[0.06]" value={set.weightKg || ""} onChange={(e) => updateSet(set.oi, "weightKg", Number(e.target.value))} disabled={set.completed} placeholder="0" />
-                      <input type="number" className={`rounded-xl bg-black/[0.04] px-2 py-2.5 text-center text-[15px] tracking-tight outline-none focus:bg-black/[0.06] ${repTone(set.reps, config)}`} value={set.reps || ""} onChange={(e) => updateSet(set.oi, "reps", Number(e.target.value))} disabled={set.completed} placeholder={String(config?.targetRepsMin ?? 0)} />
-                      <button onClick={() => completeSet(set.oi)} disabled={set.completed} className={`flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200 ${set.completed ? "bg-emerald-500/15 text-emerald-400" : "bg-black/[0.04] text-black/20 hover:bg-emerald-500 hover:text-black/70"}`}>
-                        <Check size={13} />
+                    <div
+                      key={set.oi}
+                      className={`mb-2 grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_2.25rem] items-center gap-3 transition-opacity duration-[var(--response-base)] ${
+                        set.completed ? "opacity-40" : ""
+                      }`}
+                    >
+                      <span className="text-center text-[0.875rem] font-semibold tabular-nums text-[color:var(--ink-quaternary)]">{set.setNumber}</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        aria-label={`${name} set ${set.setNumber} weight in kg`}
+                        className="rounded-[0.75rem] bg-[rgba(120,120,128,0.09)] px-2 py-2.5 text-center text-[0.9375rem] font-medium tabular-nums tracking-[-0.01em] text-[color:var(--ink)] outline-none transition-[background-color,box-shadow] duration-[var(--response-fast)] focus:bg-[rgba(120,120,128,0.13)] focus:ring-2 focus:ring-emerald-500/35 disabled:opacity-100"
+                        value={set.weightKg || ""}
+                        onChange={(e) => updateSet(set.oi, "weightKg", Number(e.target.value))}
+                        disabled={set.completed}
+                        placeholder="0"
+                      />
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        aria-label={`${name} set ${set.setNumber} reps`}
+                        className={`rounded-[0.75rem] bg-[rgba(120,120,128,0.09)] px-2 py-2.5 text-center text-[0.9375rem] font-medium tabular-nums tracking-[-0.01em] outline-none transition-[background-color,box-shadow,color] duration-[var(--response-fast)] focus:bg-[rgba(120,120,128,0.13)] focus:ring-2 focus:ring-emerald-500/35 disabled:opacity-100 ${repTone(set.reps, config)}`}
+                        value={set.reps || ""}
+                        onChange={(e) => updateSet(set.oi, "reps", Number(e.target.value))}
+                        disabled={set.completed}
+                        placeholder={String(config?.targetRepsMin ?? 0)}
+                      />
+                      <button
+                        onClick={() => completeSet(set.oi)}
+                        disabled={set.completed}
+                        aria-label={set.completed ? `Set ${set.setNumber} logged` : `Log set ${set.setNumber}`}
+                        className={`pressable flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-[var(--response-fast)] ${
+                          set.completed
+                            ? "bg-emerald-500 text-white"
+                            : "bg-[rgba(120,120,128,0.12)] text-[color:var(--ink-tertiary)] hover:bg-emerald-500 hover:text-white"
+                        }`}
+                      >
+                        <Check size={14} strokeWidth={3} />
                       </button>
                     </div>
                   ))}
-                  <button onClick={() => addSet(name)} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-[13px] text-black/15 transition-colors hover:bg-black/[0.03] hover:text-black/70/35">
-                    <Plus size={13} />Add set
+                  <button
+                    onClick={() => addSet(name)}
+                    className="pressable mt-3 flex w-full items-center justify-center gap-1.5 rounded-[0.75rem] py-3 text-[0.8125rem] font-medium text-[color:var(--ink-tertiary)] transition-colors hover:bg-[rgba(120,120,128,0.07)] hover:text-[color:var(--ink)]"
+                  >
+                    <Plus size={14} />Add set
                   </button>
                 </Card>
                 {exIdx < exerciseNames.length - 1 && config && (
                   <div className="flex items-center justify-center gap-1.5 py-3 text-caption">
-                    <ArrowDownUp size={10} /><span>{fmt(config.intervalSeconds)} transition</span>
+                    <ArrowDownUp size={10} className="text-[color:var(--ink-quaternary)]" />
+                    <span>{fmt(config.intervalSeconds)} to next exercise</span>
                   </div>
                 )}
               </div>
@@ -229,10 +284,21 @@ export default function WorkoutPage() {
     <div>
       <PageHeader title="Workout" subtitle="Train or manage templates." />
 
-      <div className="mb-6 flex gap-1 rounded-full glass-subtle p-1">
+      {/* Segmented control: the selected segment is a solid slug on a recessed
+          track, and the whole control is one row of equal-weight choices. */}
+      <div role="tablist" className="glass-subtle mb-6 flex gap-1 rounded-full p-1">
         {(["start", "templates"] as ViewMode[]).map((mode) => (
-          <button key={mode} onClick={() => { setViewMode(mode); setShowForm(false); setEditingId(null); }}
-            className={`flex-1 rounded-full py-2.5 text-[13px] font-semibold tracking-tight transition-all duration-300 ${viewMode === mode ? "glass text-black" : "text-black/25"}`}>
+          <button
+            key={mode}
+            role="tab"
+            aria-selected={viewMode === mode}
+            onClick={() => { setViewMode(mode); setShowForm(false); setEditingId(null); }}
+            className={`pressable-subtle flex-1 rounded-full py-2.5 text-[0.8125rem] font-semibold tracking-[-0.01em] transition-colors duration-[var(--response-base)] ${
+              viewMode === mode
+                ? "bg-white text-[color:var(--ink)] shadow-[0_1px_3px_rgba(0,0,0,0.1),0_0_0_0.5px_rgba(0,0,0,0.04)]"
+                : "text-[color:var(--ink-tertiary)]"
+            }`}
+          >
             {mode === "start" ? "Start" : "Templates"}
           </button>
         ))}
@@ -247,8 +313,8 @@ export default function WorkoutPage() {
           </div>
           {templates.length === 0 ? (
             <Card className="py-16 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-black/[0.03]">
-                <Dumbbell size={24} className="text-black/15" />
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(120,120,128,0.07)]">
+                <Dumbbell size={24} className="text-[color:var(--ink-quaternary)]" />
               </div>
               <p className="text-caption">No templates yet</p>
               <Button size="sm" className="mt-5" onClick={() => { setViewMode("templates"); setShowForm(true); }}>Create template</Button>
@@ -261,7 +327,7 @@ export default function WorkoutPage() {
                     <Play size={20} className="text-emerald-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-title-sm text-black/85">{t.name}</h3>
+                    <h3 className="text-title-sm text-[color:var(--ink)]">{t.name}</h3>
                     <p className="text-caption mt-0.5 truncate">{t.exercises.map((e) => e.exerciseName).join(" · ")}</p>
                   </div>
                 </div>
@@ -286,8 +352,8 @@ export default function WorkoutPage() {
             <div className="space-y-3">
               {templates.length === 0 ? (
                 <div className="py-16 text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-black/[0.02]">
-                    <Dumbbell size={28} className="text-black/10" />
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(120,120,128,0.06)]">
+                    <Dumbbell size={28} className="text-[color:var(--ink-quaternary)]" />
                   </div>
                   <p className="text-caption">No templates yet</p>
                 </div>

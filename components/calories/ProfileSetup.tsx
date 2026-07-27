@@ -30,7 +30,7 @@ export default function ProfileSetup({ initial, onSave, onCancel }: ProfileSetup
   return (
     <Card className="animate-fade-in space-y-5">
       <div>
-        <h3 className="text-title-sm text-black">Profile setup</h3>
+        <h3 className="text-title-sm on-material">Profile setup</h3>
         <p className="text-caption mt-1">We need a few details to calculate your daily target.</p>
       </div>
       <div className="grid grid-cols-2 gap-3">

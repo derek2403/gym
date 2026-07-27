@@ -28,6 +28,34 @@
   --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", monospace;
 }
 
+/*
+ * Motion tokens.
+ *
+ * Nothing here is gesture-driven, so CSS transitions are safe — but the curves
+ * approximate a critically damped spring (no overshoot) rather than a generic
+ * ease, and durations sit in the 0.3–0.4s "response" band. Bounce is reserved
+ * for the one place a movement carries momentum: the press release.
+ */
+:root {
+  --ease-settle: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-press: cubic-bezier(0.4, 0, 0.2, 1);
+  --response-fast: 0.2s;
+  --response-base: 0.34s;
+  --response-slow: 0.44s;
+
+  /* Press feedback fires on pointer-down and must feel instant. */
+  --press-duration: 0.1s;
+
+  --radius-field: 0.875rem;
+  --radius-surface: 1.25rem;
+  --radius-chrome: 2rem;
+
+  --ink: #1c1c1e;
+  --ink-secondary: rgba(60, 60, 67, 0.72);
+  --ink-tertiary: rgba(60, 60, 67, 0.5);
+  --ink-quaternary: rgba(60, 60, 67, 0.32);
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
   box-sizing: border-box;
@@ -39,113 +67,202 @@ html {
 }
 
 body {
-  background: #f2f2f7;
-  color: #1c1c1e;
+  /* A soft vertical wash gives the translucent layers something to pick up.
+     Fixed attachment keeps it from sliding under scrolling content. */
+  background: linear-gradient(180deg, #f7f7fa 0%, #eeeef3 55%, #e9e9f0 100%) fixed;
+  color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior: none;
+  overscroll-behavior-y: none;
   font-feature-settings: "cv11", "ss01";
-  letter-spacing: -0.01em;
+  /* No global letter-spacing: tracking is size-specific and set per scale step. */
 }
 
-/* ======= LIQUID GLASS SYSTEM (Light) ======= */
+/* ======= MATERIALS =======
+ *
+ * Three weights, used for three jobs. They are never stacked light-on-light:
+ * .glass and .glass-elevated are surfaces, .glass-subtle is an inset region
+ * that only ever appears *inside* a surface, and .chrome is reserved for
+ * floating navigation that content scrolls beneath.
+ */
 
 .glass {
   position: relative;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 0.5px solid rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.7);
   box-shadow:
-    0 0 0 0.5px rgba(0, 0, 0, 0.04),
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    0 8px 32px rgba(0, 0, 0, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 0 0 0.5px rgba(0, 0, 0, 0.035),
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 20px -6px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
+/* Bigger surfaces read as thicker glass: more blur, deeper shadow. */
 .glass-elevated {
   position: relative;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(60px) saturate(200%);
-  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(52px) saturate(200%);
+  -webkit-backdrop-filter: blur(52px) saturate(200%);
   border: 0.5px solid rgba(255, 255, 255, 0.9);
   box-shadow:
-    0 0 0 0.5px rgba(0, 0, 0, 0.05),
-    0 4px 16px rgba(0, 0, 0, 0.06),
-    0 16px 48px rgba(0, 0, 0, 0.04),
+    0 0 0 0.5px rgba(0, 0, 0, 0.045),
+    0 2px 6px rgba(0, 0, 0, 0.05),
+    0 20px 48px -12px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
+/* Inset region — recessed, not another floating pane. No blur: it sits on an
+   already-translucent parent, and blurring blurred content muddies text. */
 .glass-subtle {
-  background: rgba(0, 0, 0, 0.03);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 0.5px solid rgba(0, 0, 0, 0.06);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: rgba(120, 120, 128, 0.07);
+  border: 0.5px solid rgba(0, 0, 0, 0.045);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.02);
+}
+
+/* Floating chrome — the heaviest material, since content passes underneath. */
+.chrome {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(48px) saturate(190%);
+  -webkit-backdrop-filter: blur(48px) saturate(190%);
+  border: 0.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.04),
+    0 4px 16px -2px rgba(0, 0, 0, 0.08),
+    0 12px 40px -8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 .glass-tint-green {
-  background: rgba(16, 185, 129, 0.08);
-  border-color: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.22);
 }
 
-/* ======= TYPOGRAPHY SYSTEM ======= */
+/* Scroll edge effect: content dissolves into the background where it passes
+   beneath floating chrome, instead of meeting a hard divider line. */
+.scroll-scrim {
+  background: linear-gradient(180deg, rgba(233, 233, 240, 0) 0%, rgba(233, 233, 240, 0.72) 45%, rgba(233, 233, 240, 0.95) 100%);
+  pointer-events: none;
+}
+
+/* ======= TYPOGRAPHY =======
+ *
+ * Tracking is size-specific: large text tightens, body sits near zero, small
+ * text opens up slightly for legibility. Leading moves inversely to size.
+ * Sizes are in rem so the layout scales with the reader's text-size setting.
+ */
+
+.text-display {
+  font-size: 2.125rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  color: var(--ink);
+}
 
 .text-title-lg {
-  font-size: 34px;
+  font-size: 1.75rem;
   font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 1.1;
-  color: #1c1c1e;
+  letter-spacing: -0.03em;
+  line-height: 1.14;
+  color: var(--ink);
 }
 
 .text-title-md {
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.2;
-  color: #1c1c1e;
+  font-size: 1.375rem;
+  font-weight: 650;
+  letter-spacing: -0.022em;
+  line-height: 1.22;
+  color: var(--ink);
 }
 
 .text-title-sm {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.014em;
   line-height: 1.3;
-  color: #1c1c1e;
+  color: var(--ink);
 }
 
 .text-body {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 400;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
   line-height: 1.47;
-  color: #1c1c1e;
+  color: var(--ink);
 }
 
 .text-body-sm {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 400;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   line-height: 1.4;
-  color: #3a3a3c;
+  color: var(--ink-secondary);
 }
 
 .text-caption {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 400;
-  letter-spacing: -0.005em;
+  letter-spacing: 0.005em;
   line-height: 1.35;
-  color: rgba(60, 60, 67, 0.6);
+  color: var(--ink-tertiary);
 }
 
 .text-overline {
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.055em;
   text-transform: uppercase;
-  color: rgba(60, 60, 67, 0.4);
+  color: var(--ink-quaternary);
+}
+
+/* Numerals in a metric stay in the system face — it already ships tabular
+   figures, so digits hold their column as values change without dropping into
+   a typewriter voice. Tightened, because large figures drift apart optically. */
+.text-metric {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.03em;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+/* Vibrancy: text over translucent material needs more weight and contrast than
+   text on an opaque background, or the blur behind it eats the strokes. */
+.on-material {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ======= INTERACTION ======= */
+
+/* Every pressable surface responds on pointer-down, never on release. */
+.pressable {
+  transition: transform var(--press-duration) var(--ease-press);
+  will-change: transform;
+  touch-action: manipulation;
+}
+
+.pressable:active {
+  transform: scale(0.97);
+}
+
+.pressable-subtle:active {
+  transform: scale(0.985);
+}
+
+/* Hit target padding — the tappable area extends past the visible one. */
+.hit-pad {
+  position: relative;
+}
+
+.hit-pad::after {
+  content: "";
+  position: absolute;
+  inset: -0.5rem;
 }
 
 /* ======= UTILITIES ======= */
@@ -160,22 +277,33 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Surfaces materialize — blur and scale resolve together, so the panel reads as
+   glass arriving rather than a flat rectangle fading in. */
+@keyframes materialize {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.985);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
+  from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: materialize var(--response-slow) var(--ease-settle);
 }
 
 .animate-scale-in {
-  animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: scale-in var(--response-base) var(--ease-settle);
+  /* Anchored to its trigger by the caller via transform-origin. */
 }
 
 .scrollbar-none::-webkit-scrollbar {
@@ -184,4 +312,85 @@ input[type="number"] {
 
 ::selection {
   background: rgba(16, 185, 129, 0.2);
+}
+
+/* ======= ACCESSIBILITY =======
+ *
+ * Reduced motion still gets feedback — just non-vestibular: cross-fades in
+ * place of movement, and no scale on press.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes materialize {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes scale-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .animate-fade-in,
+  .animate-scale-in {
+    animation-duration: var(--response-fast);
+    animation-timing-function: ease;
+  }
+
+  .pressable:active,
+  .pressable-subtle:active {
+    transform: none;
+    opacity: 0.72;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.12s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Translucency off: materials go frosty-solid rather than losing their edges. */
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .glass-elevated,
+  .chrome {
+    background: #ffffff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .glass-subtle {
+    background: #f0f0f4;
+  }
+
+  .scroll-scrim {
+    background: #eeeef3;
+  }
+}
+
+/* High contrast: solid backgrounds with a defined border. */
+@media (prefers-contrast: more) {
+  :root {
+    --ink-secondary: rgba(28, 28, 30, 0.9);
+    --ink-tertiary: rgba(28, 28, 30, 0.75);
+    --ink-quaternary: rgba(28, 28, 30, 0.6);
+  }
+
+  .glass,
+  .glass-elevated,
+  .chrome {
+    background: #ffffff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid rgba(0, 0, 0, 0.5);
+  }
+
+  .glass-subtle {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.35);
+  }
 }

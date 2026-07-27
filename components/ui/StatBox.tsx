@@ -8,12 +8,16 @@ interface StatBoxProps {
 
 export default function StatBox({ value, label, unit }: StatBoxProps) {
   return (
-    <Card variant="subtle" className="flex flex-col items-center justify-center py-5">
-      <span className="font-mono text-[24px] font-bold tracking-tighter text-black/85">
+    <Card variant="subtle" className="flex flex-col items-center justify-center gap-1 py-5">
+      <span className="text-metric text-[1.5rem] leading-none">
         {value}
-        {unit && <span className="text-[13px] font-normal tracking-normal text-black/25">{unit}</span>}
+        {unit && (
+          <span className="ml-0.5 text-[0.75rem] font-normal tracking-normal text-[color:var(--ink-quaternary)]">
+            {unit}
+          </span>
+        )}
       </span>
-      <span className="text-caption mt-1.5">{label}</span>
+      <span className="text-caption">{label}</span>
     </Card>
   );
 }

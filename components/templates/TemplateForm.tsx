@@ -5,7 +5,7 @@ import Card from "@/components/ui/Card";
 import { Plus, Trash2, Timer, ArrowDownUp } from "lucide-react";
 import { normalizeRepRange } from "@/lib/utils";
 
-const NUM_FIELD = "w-full min-w-0 rounded-lg bg-black/[0.04] px-2 py-2 text-center text-[13px] text-black/75 outline-none focus:bg-black/[0.06]";
+const NUM_FIELD = "w-full min-w-0 rounded-lg bg-[rgba(120,120,128,0.09)] px-2 py-2 text-center text-[13px] text-[color:var(--ink)] outline-none focus:bg-[rgba(120,120,128,0.13)]";
 
 interface Exercise {
   exerciseName: string;
@@ -86,18 +86,18 @@ export default function TemplateForm({
           {attempted && exerciseMissing && <span className="text-[12px] text-red-500">Name at least one exercise.</span>}
         </div>
         {exercises.map((ex, i) => (
-          <Card key={i} variant="subtle" className="p-4">
+          <Card key={i} className="p-4">
             <div className="flex items-start gap-3">
               <div className="flex-1 space-y-3">
                 <input
-                  className={`w-full rounded-xl bg-black/[0.04] px-3.5 py-3 text-[15px] text-black/85 placeholder:text-black/15 outline-none focus:bg-black/[0.06] ${attempted && exerciseMissing ? "ring-2 ring-red-500/30" : ""}`}
+                  className={`w-full rounded-xl bg-[rgba(120,120,128,0.09)] px-3.5 py-3 text-[15px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-quaternary)] outline-none focus:bg-[rgba(120,120,128,0.13)] ${attempted && exerciseMissing ? "ring-2 ring-red-500/30" : ""}`}
                   placeholder="Exercise name"
                   value={ex.exerciseName}
                   onChange={(e) => updateExercise(i, "exerciseName", e.target.value)}
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="mb-1 flex items-center gap-1 text-[10px] text-black/20">Sets</span>
+                    <span className="mb-1.5 flex items-center gap-1 text-[0.6875rem] font-medium text-[color:var(--ink-tertiary)]">Sets</span>
                     <input
                       type="number"
                       className={NUM_FIELD}
@@ -107,7 +107,7 @@ export default function TemplateForm({
                     />
                   </div>
                   <div>
-                    <span className="mb-1 flex items-center gap-1 text-[10px] text-black/20">Rep range</span>
+                    <span className="mb-1.5 flex items-center gap-1 text-[0.6875rem] font-medium text-[color:var(--ink-tertiary)]">Rep range</span>
                     <div className="flex items-center gap-1.5">
                       <input
                         type="number"
@@ -117,7 +117,7 @@ export default function TemplateForm({
                         onBlur={() => clampRange(i)}
                         min={1}
                       />
-                      <span className="text-[12px] text-black/15">–</span>
+                      <span className="text-[12px] text-[color:var(--ink-quaternary)]">–</span>
                       <input
                         type="number"
                         className={NUM_FIELD}
@@ -135,7 +135,7 @@ export default function TemplateForm({
                     { label: "Next", field: "intervalSeconds" as const, val: ex.intervalSeconds, icon: <ArrowDownUp size={8} /> },
                   ].map(({ label, field, val, icon }) => (
                     <div key={field}>
-                      <span className="mb-1 flex items-center gap-1 text-[10px] text-black/20">
+                      <span className="mb-1.5 flex items-center gap-1 text-[0.6875rem] font-medium text-[color:var(--ink-tertiary)]">
                         {icon}
                         {label}
                       </span>
@@ -150,7 +150,7 @@ export default function TemplateForm({
                   ))}
                 </div>
               </div>
-              <button onClick={() => removeExercise(i)} className="mt-2 p-1.5 text-black/10 transition-colors hover:text-red-400">
+              <button onClick={() => removeExercise(i)} className="mt-2 p-1.5 text-[color:var(--ink-quaternary)] transition-colors hover:text-red-400">
                 <Trash2 size={15} />
               </button>
             </div>
@@ -160,7 +160,7 @@ export default function TemplateForm({
 
       <button
         onClick={addExercise}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-black/8 py-4 text-[13px] text-black/20 transition-colors hover:border-black/10 hover:text-black/70/35"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-black/8 py-4 text-[13px] text-[color:var(--ink-quaternary)] transition-colors hover:border-black/10 hover:text-[color:var(--ink-secondary)]"
       >
         <Plus size={15} />
         Add exercise

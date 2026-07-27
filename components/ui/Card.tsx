@@ -16,17 +16,23 @@ export default function Card({ children, className, onClick, variant = "default"
     tint: "glass glass-tint-green",
   };
 
+  // A card that does something is a button: it takes focus, answers the
+  // keyboard, and depresses on pointer-down like any other control.
+  const Tag = onClick ? "button" : "div";
+
   return (
-    <div
+    <Tag
       onClick={onClick}
+      type={onClick ? "button" : undefined}
       className={cn(
-        "rounded-[20px] p-4",
+        "rounded-[var(--radius-surface)] p-4",
         variants[variant],
-        onClick && "cursor-pointer transition-transform duration-200 active:scale-[0.98]",
+        onClick &&
+          "pressable-subtle block w-full cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40",
         className
       )}
     >
       {children}
-    </div>
+    </Tag>
   );
 }

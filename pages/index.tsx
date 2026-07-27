@@ -29,36 +29,41 @@ export default function TodayPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="mb-10">
-        <p className="text-caption">{dateStr}</p>
-        <h1 className="text-title-lg mt-1 text-black">{greeting}, {firstName}</h1>
+      <div className="mb-8">
+        <p className="text-overline">{dateStr}</p>
+        <h1 className="text-display mt-2 text-balance">{greeting}{firstName && `, ${firstName}`}</h1>
       </div>
 
-      <Card variant="tint" className="mb-6" onClick={() => router.push("/workout")}>
+      <Card variant="tint" className="mb-6 p-5" onClick={() => router.push("/workout")}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/15">
-              <Dumbbell size={22} className="text-emerald-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/20">
+              <Dumbbell size={22} className="text-emerald-600" />
             </div>
             <div>
-              <h3 className="text-title-sm text-black">Start workout</h3>
+              <h3 className="text-title-sm on-material">Start workout</h3>
               <p className="text-caption mt-0.5">Train with your templates</p>
             </div>
           </div>
-          <ChevronRight size={20} className="text-black/15" />
+          <ChevronRight size={20} className="text-[color:var(--ink-quaternary)]" />
         </div>
       </Card>
 
-      <div className="mb-6 grid grid-cols-3 gap-3">
-        <StatBox value={stats.weekSessions} label="Sessions" />
-        <StatBox value={stats.weekCompletedSets} label="Sets" />
-        <StatBox value={stats.topLiftWeek.toFixed(1)} label="Top kg" />
-      </div>
+      {/* Grouped under a label so the numbers state their own scope — three bare
+          figures leave you guessing whether they're weekly or all-time. */}
+      <section className="mb-6">
+        <h2 className="text-overline mb-2.5">This week</h2>
+        <div className="grid grid-cols-3 gap-2.5">
+          <StatBox value={stats.weekSessions} label="Sessions" />
+          <StatBox value={stats.weekCompletedSets} label="Sets" />
+          <StatBox value={stats.topLiftWeek.toFixed(1)} label="Top lift" unit="kg" />
+        </div>
+      </section>
 
       <div className="space-y-3">
         {[
-          { label: "History", desc: "Workouts & progression", icon: BarChart3, href: "/history", color: "text-amber-400", bg: "bg-amber-500/10" },
-          { label: "Track", desc: "Body metrics & body fat", icon: TrendingUp, href: "/track", color: "text-purple-400", bg: "bg-purple-500/10" },
+          { label: "History", desc: "Past workouts & progression", icon: BarChart3, href: "/history", color: "text-amber-600", bg: "bg-amber-500/15" },
+          { label: "Body", desc: "Weight, height & body fat", icon: TrendingUp, href: "/track", color: "text-purple-600", bg: "bg-purple-500/15" },
         ].map(({ label, desc, icon: Icon, href, color, bg }) => (
           <Card key={href} onClick={() => router.push(href)}>
             <div className="flex items-center justify-between">
@@ -67,11 +72,11 @@ export default function TodayPage() {
                   <Icon size={18} className={color} />
                 </div>
                 <div>
-                  <h3 className="text-title-sm text-black/85">{label}</h3>
+                  <h3 className="text-title-sm on-material">{label}</h3>
                   <p className="text-caption mt-0.5">{desc}</p>
                 </div>
               </div>
-              <ChevronRight size={18} className="text-black/10" />
+              <ChevronRight size={18} className="text-[color:var(--ink-quaternary)]" />
             </div>
           </Card>
         ))}

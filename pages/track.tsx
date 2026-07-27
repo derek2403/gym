@@ -78,15 +78,21 @@ export default function TrackPage() {
 
   return (
     <div className="animate-fade-in">
-      <PageHeader title="Tracking" subtitle="Body metrics and progress." />
+      {/* Titled "Body" to match the tab that leads here — a destination whose
+          name changes on arrival makes you re-orient every time. */}
+      <PageHeader title="Body" subtitle="Weight, height and body fat." />
 
-      <div className="mb-6 flex gap-1.5 rounded-full glass-subtle p-1">
+      <div role="tablist" className="glass-subtle mb-6 flex gap-1 rounded-full p-1">
         {METRIC_OPTIONS.map((opt) => (
           <button
             key={opt.value}
+            role="tab"
+            aria-selected={activeType === opt.value}
             onClick={() => setActiveType(opt.value)}
-            className={`flex-1 rounded-full py-2.5 text-[13px] font-semibold tracking-tight transition-all duration-300 ${
-              activeType === opt.value ? "glass text-black" : "text-black/25"
+            className={`pressable-subtle flex-1 rounded-full py-2.5 text-[0.8125rem] font-semibold tracking-[-0.01em] transition-colors duration-[var(--response-base)] ${
+              activeType === opt.value
+                ? "bg-white text-[color:var(--ink)] shadow-[0_1px_3px_rgba(0,0,0,0.1),0_0_0_0.5px_rgba(0,0,0,0.04)]"
+                : "text-[color:var(--ink-tertiary)]"
             }`}
           >
             {opt.label}
@@ -96,7 +102,7 @@ export default function TrackPage() {
 
       {activeType === "body_fat" ? (
         <Card className="mb-5">
-          <h3 className="text-title-sm text-black/85">Body fat estimation</h3>
+          <h3 className="text-title-sm text-[color:var(--ink)]">Body fat estimation</h3>
           <p className="text-caption mt-1 mb-4">U.S. Navy method. Enter measurements below.</p>
           <div className="grid grid-cols-2 gap-3">
             <Input label="Waist (cm)" type="number" step="0.1" placeholder="84.0" value={bfWaist} onChange={(e) => setBfWaist(e.target.value)} />
@@ -107,7 +113,7 @@ export default function TrackPage() {
           {bfResult !== null && (
             <div className="mt-5 glass-tint-green rounded-2xl p-5 text-center">
               <p className="text-caption">Estimated body fat</p>
-              <p className="font-mono text-[36px] font-bold tracking-tighter text-emerald-400">{bfResult}%</p>
+              <p className="text-metric text-[2.25rem] text-emerald-600">{bfResult}%</p>
             </div>
           )}
           {!profile?.heightCm && <p className="mt-3 text-[12px] text-amber-400/70">Set up your profile in Calories first (height needed).</p>}
@@ -125,7 +131,7 @@ export default function TrackPage() {
 
       <Card className="mb-5">
         <div className="flex items-center justify-between">
-          <h3 className="text-title-sm text-black/85">Progress</h3>
+          <h3 className="text-title-sm text-[color:var(--ink)]">Progress</h3>
           {metrics.length > 0 && <span className="text-caption">Latest: {metrics[0].value}{activeOption.unit}</span>}
         </div>
         {chartData.length >= 2 ? (
@@ -145,18 +151,18 @@ export default function TrackPage() {
       </Card>
 
       <Card>
-        <h3 className="text-title-sm text-black/85 mb-4">Recent entries</h3>
+        <h3 className="text-title-sm text-[color:var(--ink)] mb-4">Recent entries</h3>
         {metrics.length === 0 ? (
           <p className="text-caption">No entries yet.</p>
         ) : (
           <div className="space-y-2">
             {metrics.slice(0, 10).map((m) => (
-              <div key={m.id} className="flex items-center justify-between rounded-2xl bg-black/[0.02] px-4 py-3">
+              <div key={m.id} className="flex items-center justify-between rounded-2xl bg-[rgba(120,120,128,0.06)] px-4 py-3">
                 <div>
-                  <span className="font-mono text-[15px] font-medium text-black/75">{m.value}<span className="text-black/20">{activeOption.unit}</span></span>
+                  <span className="tabular-nums text-[15px] font-medium text-[color:var(--ink)]">{m.value}<span className="text-[color:var(--ink-quaternary)]">{activeOption.unit}</span></span>
                   <span className="ml-3 text-caption">{formatDateShort(m.date)}</span>
                 </div>
-                <button onClick={() => handleDelete(m.id)} className="p-1.5 text-black/10 transition-colors hover:text-red-400">
+                <button onClick={() => handleDelete(m.id)} className="p-1.5 text-[color:var(--ink-quaternary)] transition-colors hover:text-red-400">
                   <Trash2 size={14} />
                 </button>
               </div>

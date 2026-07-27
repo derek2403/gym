@@ -43,7 +43,7 @@ export default function ConsistencyCalendar({ days }: ConsistencyCalendarProps) 
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-title-sm text-black/85">Consistency</h3>
+        <h3 className="text-title-sm text-[color:var(--ink)]">Consistency</h3>
         <span className="text-caption">
           {(() => {
             const workoutDays = days.filter((d) => d.hasWorkout).length;
@@ -59,7 +59,7 @@ export default function ConsistencyCalendar({ days }: ConsistencyCalendarProps) 
         <div className="inline-flex gap-1.5">
           <div className="flex flex-col gap-[3px] pt-5">
             {DAY_LABELS.map((label, i) => (
-              <div key={i} className="flex h-[11px] w-3 items-center justify-center text-[9px] text-black/15">
+              <div key={i} className="flex h-[11px] w-3 items-center justify-center text-[9px] text-[color:var(--ink-quaternary)]">
                 {i % 2 === 0 ? label : ""}
               </div>
             ))}
@@ -67,7 +67,7 @@ export default function ConsistencyCalendar({ days }: ConsistencyCalendarProps) 
           <div className="flex flex-col gap-[3px]">
             <div className="relative h-4">
               {monthPositions.map(({ label, col }) => (
-                <span key={`${label}-${col}`} className="absolute text-[9px] text-black/20" style={{ left: `${col * 14.5}px` }}>{label}</span>
+                <span key={`${label}-${col}`} className="absolute text-[9px] text-[color:var(--ink-quaternary)]" style={{ left: `${col * 14.5}px` }}>{label}</span>
               ))}
             </div>
             {[0, 1, 2, 3, 4, 5, 6].map((row) => (
@@ -76,7 +76,7 @@ export default function ConsistencyCalendar({ days }: ConsistencyCalendarProps) 
                   const day = week[row];
                   if (!day) return <div key={colIdx} className="h-[11px] w-[11px]" />;
                   return (
-                    <div key={day.date} className={`h-[11px] w-[11px] rounded-[3px] transition-colors ${day.hasWorkout ? "bg-emerald-500" : "bg-black/[0.04]"}`} title={day.date} />
+                    <div key={day.date} className={`h-[11px] w-[11px] rounded-[3px] transition-colors ${day.hasWorkout ? "bg-emerald-500" : "bg-[rgba(120,120,128,0.09)]"}`} title={day.date} />
                   );
                 })}
               </div>
