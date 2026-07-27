@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import PageHeader from "@/components/ui/PageHeader";
+import NavBar from "@/components/ui/NavBar";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -307,7 +307,7 @@ export default function CaloriesPage() {
   if (showSetup) {
     return (
       <div>
-        <PageHeader title="Calories" subtitle="Set up your profile to get started." />
+        <NavBar title="Calories" subtitle="Set up your profile to get started." />
         <ProfileSetup
           initial={profile ? { ...profile, sex: profile.sex || "male" } : undefined}
           onSave={saveProfile}
@@ -319,21 +319,22 @@ export default function CaloriesPage() {
 
   return (
     <div>
-      <PageHeader
+      <NavBar
         title="Calories"
-        subtitle="AI-powered nutrition tracking."
-        action={
+        subtitle="Estimates run high on purpose — log a quantity for the tightest numbers."
+        trailing={
           <button
             onClick={() => setShowSetup(true)}
-            className="rounded-xl p-2 text-[color:var(--ink-quaternary)] transition-colors hover:bg-[rgba(120,120,128,0.09)] hover:text-[color:var(--ink-secondary)]"
+            aria-label="Calorie settings"
+            className="pressable -mr-2 rounded-full p-2 text-emerald-600"
           >
-            <Settings size={18} />
+            <Settings size={21} />
           </button>
         }
       />
 
       {/* View mode toggle */}
-      <div className="mb-4 flex gap-1 rounded-2xl bg-[rgba(120,120,128,0.09)] p-0.5">
+      <div className="mb-4 mt-5 flex gap-1 rounded-2xl bg-[rgba(120,120,128,0.09)] p-0.5">
         {(["daily", "weekly"] as ViewMode[]).map((mode) => (
           <button
             key={mode}

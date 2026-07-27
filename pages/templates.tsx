@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
-import PageHeader from "@/components/ui/PageHeader";
-import Button from "@/components/ui/Button";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/router";
+import NavBar from "@/components/ui/NavBar";
 import Sheet from "@/components/ui/Sheet";
 import SwipeRow from "@/components/ui/SwipeRow";
 import TemplateCard from "@/components/templates/TemplateCard";
 import TemplateForm from "@/components/templates/TemplateForm";
-import { Plus, Dumbbell } from "lucide-react";
+import { Plus, Dumbbell, ChevronLeft } from "lucide-react";
 
 interface Exercise {
   id: number;
@@ -27,9 +27,12 @@ interface Template {
 }
 
 export default function TemplatesPage() {
+  const router = useRouter();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const createRef = useRef<(() => void) | null>(null);
+  const editRef = useRef<(() => void) | null>(null);
 
   const fetchTemplates = useCallback(async () => {
     const res = await fetch("/api/templates");
@@ -69,51 +72,70 @@ export default function TemplatesPage() {
 
   return (
     <div>
-      <PageHeader
+      <NavBar
         title="Templates"
-        subtitle="Swipe a template to delete it."
-        action={
-          <Button size="sm" onClick={() => setShowForm(true)}>
-            <Plus size={16} />
-            New
-          </Button>
+        leading={
+          <button
+            onClick={() => router.push("/workout")}
+            className="pressable -ml-2 flex items-center gap-0.5 rounded-full py-1 pl-1 pr-2 text-[1.0625rem] text-emerald-600"
+          >
+            <ChevronLeft size={22} strokeWidth={2.5} />
+            Workout
+          </button>
+        }
+        trailing={
+          <button
+            onClick={() => setShowForm(true)}
+            aria-label="New template"
+            className="pressable -mr-2 rounded-full p-2 text-emerald-600"
+          >
+            <Plus size={24} strokeWidth={2.4} />
+          </button>
         }
       />
 
-      <div className="space-y-3">
+      <div className="mt-5 space-y-3">
         {templates.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex flex-col items-center justify-center px-8 py-24 text-center">
             <div className="glass-subtle mb-4 flex h-16 w-16 items-center justify-center rounded-full">
               <Dumbbell size={28} className="text-[color:var(--ink-quaternary)]" />
             </div>
-            <p className="text-caption max-w-[15rem]">
-              No templates yet. Create one to start workouts quickly.
+            <h2 className="text-title-sm">No templates</h2>
+            <p className="text-caption mt-1.5 max-w-[16rem]">
+              A template is a workout you repeat — its exercises, sets and rep ranges.
             </p>
           </div>
         ) : (
-          templates.map((t) => (
-            <SwipeRow key={t.id} label={t.name} onDelete={() => handleDelete(t.id)}>
-              <TemplateCard
-                name={t.name}
-                exerciseCount={t.exercises.length}
-                exercises={t.exercises}
-                onEdit={() => setEditingId(t.id)}
-              />
-            </SwipeRow>
-          ))
+          <>
+            {templates.map((t) => (
+              <SwipeRow key={t.id} label={t.name} onDelete={() => handleDelete(t.id)}>
+                <TemplateCard
+                  name={t.name}
+                  exerciseCount={t.exercises.length}
+                  exercises={t.exercises}
+                  onEdit={() => setEditingId(t.id)}
+                />
+              </SwipeRow>
+            ))}
+            <p className="text-caption px-4 pt-1">Swipe a template left to delete it.</p>
+          </>
         )}
       </div>
 
-      {/* Create and edit both arrive as a sheet you can throw back down —
-          the same path in and out. */}
-      <Sheet open={showForm} title="New template" onClose={() => setShowForm(false)}>
-        <TemplateForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
+      <Sheet
+        open={showForm}
+        title="New template"
+        onClose={() => setShowForm(false)}
+        confirm={{ label: "Add", onConfirm: () => createRef.current?.() }}
+      >
+        <TemplateForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} hideActions submitRef={createRef} />
       </Sheet>
 
       <Sheet
         open={editingId !== null}
-        title={editingTemplate ? `Edit ${editingTemplate.name}` : "Edit template"}
+        title="Edit template"
         onClose={() => setEditingId(null)}
+        confirm={{ label: "Done", onConfirm: () => editRef.current?.() }}
       >
         {editingTemplate && (
           <TemplateForm
@@ -128,7 +150,8 @@ export default function TemplatesPage() {
             }))}
             onSubmit={handleUpdate}
             onCancel={() => setEditingId(null)}
-            submitLabel="Save changes"
+            hideActions
+            submitRef={editRef}
           />
         )}
       </Sheet>

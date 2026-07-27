@@ -6,6 +6,8 @@ interface SheetProps {
   title?: string;
   onClose: () => void;
   children: ReactNode;
+  /** Confirm action for the modal's nav bar. Without it the bar shows only Cancel. */
+  confirm?: { label: string; onConfirm: () => void; disabled?: boolean };
 }
 
 // Drawer feel from the skill's table: a little bounce, because the motion is
@@ -15,7 +17,7 @@ const RESPONSE = 0.3;
 // Past this projected point the sheet is going away, however far it actually is.
 const DISMISS_RATIO = 0.4;
 
-export default function Sheet({ open, title, onClose, children }: SheetProps) {
+export default function Sheet({ open, title, onClose, children, confirm }: SheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const scrimRef = useRef<HTMLDivElement>(null);
   const springRef = useRef<SpringHandle | null>(null);
@@ -157,20 +159,44 @@ export default function Sheet({ open, title, onClose, children }: SheetProps) {
         className="glass-elevated relative mx-auto w-full max-w-lg rounded-t-[1.75rem] pb-8 will-change-transform"
         style={{ transform: "translate3d(0, 100%, 0)", maxHeight: "90vh" }}
       >
-        {/* The whole header is the drag handle — a 44px-tall grab area, not a
-            decorative 4px bar. */}
+        {/* The grabber and the whole bar are the drag area — a 44pt target,
+            not a decorative 4px line. */}
         <div
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-          className="cursor-grab touch-none select-none px-5 pb-2 pt-3 active:cursor-grabbing"
+          className="cursor-grab touch-none select-none pt-2.5 active:cursor-grabbing"
         >
           <div className="mx-auto h-1 w-9 rounded-full bg-[rgba(60,60,67,0.22)]" />
-          {title && <h2 className="text-title-md mt-3">{title}</h2>}
+
+          {/* Modal nav bar: leave on the left, commit on the right, subject in
+              the middle. Same geometry as every other modal on the platform. */}
+          <div className="mt-2 flex h-11 items-center justify-between gap-2 border-b-[0.5px] border-b-[rgba(60,60,67,0.12)] px-4">
+            <button
+              onClick={onClose}
+              className="pressable -mx-2 shrink-0 rounded-full px-2 py-1 text-[1.0625rem] text-emerald-600"
+            >
+              Cancel
+            </button>
+            <span className="min-w-0 flex-1 truncate text-center text-[1.0625rem] font-semibold tracking-[-0.02em]">
+              {title}
+            </span>
+            {confirm ? (
+              <button
+                onClick={confirm.onConfirm}
+                disabled={confirm.disabled}
+                className="pressable -mx-2 shrink-0 rounded-full px-2 py-1 text-[1.0625rem] font-semibold text-emerald-600 disabled:opacity-35"
+              >
+                {confirm.label}
+              </button>
+            ) : (
+              <span className="w-[3.5rem] shrink-0" aria-hidden="true" />
+            )}
+          </div>
         </div>
 
-        <div className="max-h-[calc(90vh-5rem)] overflow-y-auto overscroll-contain px-5 pt-1">{children}</div>
+        <div className="max-h-[calc(90vh-7rem)] overflow-y-auto overscroll-contain px-4 pt-4">{children}</div>
       </div>
     </div>
   );

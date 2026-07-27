@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import PageHeader from "@/components/ui/PageHeader";
+import NavBar from "@/components/ui/NavBar";
 import Card from "@/components/ui/Card";
 import StatBox from "@/components/ui/StatBox";
 import ConsistencyCalendar from "@/components/history/ConsistencyCalendar";
@@ -49,7 +49,7 @@ export default function HistoryPage() {
 
   return (
     <div className="animate-fade-in">
-      <PageHeader title="History" subtitle="Progression and PR context." />
+      <NavBar title="History" subtitle="Progression and PR context." />
 
       <div className="mb-5 grid grid-cols-3 gap-3">
         <StatBox value={stats.totalSessions} label="Sessions" />

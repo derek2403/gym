@@ -7,9 +7,10 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div className="mx-auto min-h-screen max-w-lg pb-32">
-      {/* Top padding clears the status bar on a standalone iOS install. */}
-      <main className="px-5 pt-[max(3.5rem,env(safe-area-inset-top))]">{children}</main>
+    <div className="mx-auto min-h-screen max-w-lg">
+      {/* Bottom padding clears the tab bar plus the home indicator, so the last
+          row of any list can still be reached and read. */}
+      <main className="px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))]">{children}</main>
       <BottomNav />
     </div>
   );

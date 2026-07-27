@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import Card from "@/components/ui/Card";
-import StatBox from "@/components/ui/StatBox";
+import NavBar from "@/components/ui/NavBar";
+import { List, ListRow } from "@/components/ui/List";
 import WeekStrip from "@/components/home/WeekStrip";
-import { Dumbbell, BarChart3, Ruler, Flame, ChevronRight, Play } from "lucide-react";
+import { BarChart3, Ruler, Flame, Play, Dumbbell, TrendingUp } from "lucide-react";
 import { useAuth } from "./_app";
 import { todayStr } from "@/lib/utils";
 
@@ -43,69 +43,71 @@ export default function TodayPage() {
   const trainedToday = stats.calendarDays.some((d) => d.date === today && d.hasWorkout);
 
   return (
-    <div className="animate-fade-in">
-      <div className="mb-7">
-        <p className="text-overline">{dateStr}</p>
-        <h1 className="text-display mt-2">{greeting}{firstName && `, ${firstName}`}</h1>
-      </div>
+    <div>
+      <NavBar title="Today" subtitle={`${dateStr}${firstName ? ` · ${greeting}, ${firstName}` : ""}`} />
 
-      {/* The primary action is the page's largest, highest-contrast element —
-          on a training app, everything else is secondary to starting. */}
-      <Card variant="tint" className="mb-4 p-5" onClick={() => router.push("/workout")}>
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.125rem] bg-emerald-500 shadow-[0_2px_8px_rgba(16,185,129,0.3)]">
-            <Play size={24} strokeWidth={2.5} className="ml-0.5 text-white" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-title-md on-material">{trainedToday ? "Train again" : "Start workout"}</h2>
-            <p className="text-caption mt-0.5">
+      <div className="mt-6">
+        {/* The one thing this app exists to do, given the most weight on the
+            screen and the shortest path to it. */}
+        <button
+          onClick={() => router.push("/workout")}
+          className="pressable glass glass-tint-green mb-6 flex w-full items-center gap-4 rounded-[var(--radius-surface)] p-4 text-left"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[0.875rem] bg-emerald-500 shadow-[0_2px_8px_rgba(16,185,129,0.3)]">
+            <Play size={22} strokeWidth={2.5} className="ml-0.5 text-white" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="text-title-sm on-material block">{trainedToday ? "Train again" : "Start workout"}</span>
+            <span className="text-caption mt-0.5 block">
               {trainedToday ? "You already trained today" : "Pick a template and go"}
-            </p>
-          </div>
-          <ChevronRight size={20} className="shrink-0 text-emerald-700/40" />
-        </div>
-      </Card>
-
-      <Card className="mb-4 p-5">
-        <div className="mb-4 flex items-baseline justify-between">
-          <h2 className="text-title-sm on-material">This week</h2>
-          {stats.currentStreak > 0 && (
-            <span className="rounded-full bg-emerald-500/12 px-2.5 py-1 text-[0.6875rem] font-semibold text-emerald-700">
-              {stats.currentStreak} day streak
             </span>
-          )}
-        </div>
+          </span>
+        </button>
 
-        <WeekStrip days={stats.calendarDays} today={today} />
+        <List
+          header="This week"
+          footer={
+            stats.currentStreak > 0
+              ? `${stats.currentStreak} day streak. Sessions and sets count Sunday to Saturday.`
+              : "Sessions and sets count Sunday to Saturday."
+          }
+        >
+          <div className="px-4 pb-3 pt-4">
+            <WeekStrip days={stats.calendarDays} today={today} />
+          </div>
+          <ListRow icon={<Dumbbell size={16} className="text-emerald-600" />} iconBg="bg-emerald-500/15" title="Sessions" value={stats.weekSessions} chevron={false} />
+          <ListRow icon={<BarChart3 size={16} className="text-blue-500" />} iconBg="bg-blue-500/15" title="Sets completed" value={stats.weekCompletedSets} chevron={false} />
+          <ListRow icon={<TrendingUp size={16} className="text-amber-600" />} iconBg="bg-amber-500/15" title="Top lift" value={`${stats.topLiftWeek.toFixed(1)} kg`} chevron={false} last />
+        </List>
 
-        <div className="mt-5 grid grid-cols-3 gap-2.5">
-          <StatBox value={stats.weekSessions} label="Sessions" />
-          <StatBox value={stats.weekCompletedSets} label="Sets" />
-          <StatBox value={stats.topLiftWeek.toFixed(1)} label="Top lift" unit="kg" />
-        </div>
-      </Card>
+        <List header="Log">
+          <ListRow
+            icon={<Flame size={16} className="text-orange-600" />}
+            iconBg="bg-orange-500/15"
+            title="Calories"
+            subtitle="Food and macros"
+            onClick={() => router.push("/calories")}
+          />
+          <ListRow
+            icon={<Ruler size={16} className="text-purple-600" />}
+            iconBg="bg-purple-500/15"
+            title="Body"
+            subtitle="Weight, height and body fat"
+            onClick={() => router.push("/track")}
+            last
+          />
+        </List>
 
-      <div className="space-y-2.5">
-        {[
-          { label: "Calories", desc: "Log food and macros", icon: Flame, href: "/calories", color: "text-orange-600", bg: "bg-orange-500/15" },
-          { label: "History", desc: "Past workouts & progression", icon: BarChart3, href: "/history", color: "text-amber-600", bg: "bg-amber-500/15" },
-          { label: "Body", desc: "Weight, height & body fat", icon: Ruler, href: "/track", color: "text-purple-600", bg: "bg-purple-500/15" },
-        ].map(({ label, desc, icon: Icon, href, color, bg }) => (
-          <Card key={href} onClick={() => router.push(href)}>
-            <div className="flex items-center justify-between">
-              <div className="flex min-w-0 items-center gap-4">
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${bg}`}>
-                  <Icon size={18} className={color} />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-title-sm on-material">{label}</h3>
-                  <p className="text-caption mt-0.5 truncate">{desc}</p>
-                </div>
-              </div>
-              <ChevronRight size={18} className="shrink-0 text-[color:var(--ink-quaternary)]" />
-            </div>
-          </Card>
-        ))}
+        <List header="Review">
+          <ListRow
+            icon={<BarChart3 size={16} className="text-amber-600" />}
+            iconBg="bg-amber-500/15"
+            title="History"
+            subtitle="Past workouts and progression"
+            onClick={() => router.push("/history")}
+            last
+          />
+        </List>
       </div>
     </div>
   );

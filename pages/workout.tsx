@@ -1,13 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import PageHeader from "@/components/ui/PageHeader";
+import { useRouter } from "next/router";
+import NavBar from "@/components/ui/NavBar";
+import { List, ListRow } from "@/components/ui/List";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import StatBox from "@/components/ui/StatBox";
 import RestTimer from "@/components/workout/RestTimer";
-import TemplateCard from "@/components/templates/TemplateCard";
-import TemplateForm from "@/components/templates/TemplateForm";
-import Sheet from "@/components/ui/Sheet";
-import SwipeRow from "@/components/ui/SwipeRow";
 import { Dumbbell, Play, Check, Plus, X, ArrowDownUp } from "lucide-react";
 import { formatRepRange } from "@/lib/utils";
 
@@ -20,8 +17,6 @@ interface SetEntry {
   exerciseName: string; setNumber: number; weightKg: number; reps: number;
   completed: boolean; savedId?: number;
 }
-
-type ViewMode = "start" | "templates";
 
 const WORKOUT_STORAGE_KEY = "gym_active_workout";
 
@@ -57,6 +52,7 @@ function loadWorkoutState(): WorkoutState | null {
 }
 
 export default function WorkoutPage() {
+  const router = useRouter();
   const saved = loadWorkoutState();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [activeWorkoutId, setActiveWorkoutId] = useState<number | null>(saved?.activeWorkoutId ?? null);
@@ -67,9 +63,6 @@ export default function WorkoutPage() {
   const [restTrigger, setRestTrigger] = useState(0);
   const [intervalTimer, setIntervalTimer] = useState<{ exerciseName: string; seconds: number } | null>(null);
   const [stats, setStats] = useState({ topLift: 0, volume: 0, sessions: 0 });
-  const [viewMode, setViewMode] = useState<ViewMode>("start");
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
 
   // Persist workout state on every change
   useEffect(() => {
@@ -139,13 +132,9 @@ export default function WorkoutPage() {
     setActiveWorkoutId(null); setSets([]); setActiveTemplateName(""); setActiveExercises([]); setIntervalTimer(null); saveWorkoutState(null);
   };
 
-  const handleCreate = async (name: string, exercises: any[]) => { await fetch("/api/templates", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, exercises }) }); setShowForm(false); fetchData(); };
-  const handleUpdate = async (name: string, exercises: any[]) => { await fetch(`/api/templates/${editingId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, exercises }) }); setEditingId(null); fetchData(); };
-  const handleDelete = async (id: number) => { await fetch(`/api/templates/${id}`, { method: "DELETE" }); fetchData(); };
 
   const exerciseNames = [...new Set(sets.map((s) => s.exerciseName))];
   const completedSets = sets.filter((s) => s.completed).length;
-  const editingTemplate = templates.find((t) => t.id === editingId);
   const fmt = (s: number) => { const m = Math.floor(s / 60); const r = s % 60; return m > 0 ? `${m}m${r > 0 ? ` ${r}s` : ""}` : `${r}s`; };
   // Amber = short of the range, emerald = topped it out (time to add weight).
   const repTone = (reps: number, cfg?: TemplateExercise) => {
@@ -281,105 +270,59 @@ export default function WorkoutPage() {
     );
   }
 
-  // ===== START / TEMPLATES VIEW =====
+
+  // ===== START A SESSION =====
   return (
     <div>
-      <PageHeader title="Workout" subtitle="Train or manage templates." />
-
-      {/* Segmented control: the selected segment is a solid slug on a recessed
-          track, and the whole control is one row of equal-weight choices. */}
-      <div role="tablist" className="glass-subtle mb-6 flex gap-1 rounded-full p-1">
-        {(["start", "templates"] as ViewMode[]).map((mode) => (
+      <NavBar
+        title="Workout"
+        trailing={
           <button
-            key={mode}
-            role="tab"
-            aria-selected={viewMode === mode}
-            onClick={() => { setViewMode(mode); setShowForm(false); setEditingId(null); }}
-            className={`pressable-subtle flex-1 rounded-full py-2.5 text-[0.8125rem] font-semibold tracking-[-0.01em] transition-colors duration-[var(--response-base)] ${
-              viewMode === mode
-                ? "bg-white text-[color:var(--ink)] shadow-[0_1px_3px_rgba(0,0,0,0.1),0_0_0_0.5px_rgba(0,0,0,0.04)]"
-                : "text-[color:var(--ink-tertiary)]"
-            }`}
+            onClick={() => router.push("/templates")}
+            className="pressable -mr-2 rounded-full px-2 py-1 text-[1.0625rem] text-emerald-600"
           >
-            {mode === "start" ? "Start" : "Templates"}
+            Templates
           </button>
-        ))}
-      </div>
+        }
+      />
 
-      {viewMode === "start" && (
-        <div className="animate-fade-in space-y-4">
-          <div className="grid grid-cols-3 gap-3">
-            <StatBox value={stats.topLift.toFixed(1)} label="Top lift" unit="kg" />
-            <StatBox value={stats.volume} label="Volume" unit="kg" />
-            <StatBox value={stats.sessions} label="Sessions" />
+      <div className="mt-6">
+        <List header="All time">
+          <ListRow title="Heaviest lift" value={`${stats.topLift.toFixed(1)} kg`} chevron={false} />
+          <ListRow title="Total volume" value={`${stats.volume.toLocaleString()} kg`} chevron={false} />
+          <ListRow title="Sessions" value={stats.sessions} chevron={false} last />
+        </List>
+
+        {templates.length === 0 ? (
+          <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
+            <div className="glass-subtle mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <Dumbbell size={28} className="text-[color:var(--ink-quaternary)]" />
+            </div>
+            <h2 className="text-title-sm">Nothing to train yet</h2>
+            <p className="text-caption mt-1.5 max-w-[16rem]">
+              Build a template first — its exercises, sets and rep ranges become your session.
+            </p>
+            <Button size="sm" className="mt-5" onClick={() => router.push("/templates")}>
+              <Plus size={16} />
+              New template
+            </Button>
           </div>
-          {templates.length === 0 ? (
-            <Card className="py-16 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[rgba(120,120,128,0.07)]">
-                <Dumbbell size={24} className="text-[color:var(--ink-quaternary)]" />
-              </div>
-              <p className="text-caption">No templates yet</p>
-              <Button size="sm" className="mt-5" onClick={() => { setViewMode("templates"); setShowForm(true); }}>Create template</Button>
-            </Card>
-          ) : (
-            templates.map((t) => (
-              <Card key={t.id} className="p-5" onClick={() => startWorkout(t)}>
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15">
-                    <Play size={20} className="text-emerald-600" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-title-sm on-material truncate">{t.name}</h3>
-                    <p className="text-caption mt-0.5 truncate">
-                      {t.exercises.reduce((n, e) => n + e.targetSets, 0)} sets · {t.exercises.map((e) => e.exerciseName).join(" · ")}
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
-      )}
-
-      {viewMode === "templates" && (
-        <div className="animate-fade-in">
-          <Button size="sm" className="mb-5 w-full" onClick={() => setShowForm(true)}><Plus size={16} />New template</Button>
-          <div className="space-y-3">
-            {templates.length === 0 ? (
-              <div className="py-16 text-center">
-                <div className="glass-subtle mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-                  <Dumbbell size={28} className="text-[color:var(--ink-quaternary)]" />
-                </div>
-                <p className="text-caption">No templates yet</p>
-              </div>
-            ) : templates.map((t) => (
-              <SwipeRow key={t.id} label={t.name} onDelete={() => handleDelete(t.id)}>
-                <TemplateCard name={t.name} exerciseCount={t.exercises.length} exercises={t.exercises} onEdit={() => setEditingId(t.id)} />
-              </SwipeRow>
+        ) : (
+          <List header="Start a session" footer="Tap a template to begin. Sets are created from its targets.">
+            {templates.map((t, i) => (
+              <ListRow
+                key={t.id}
+                icon={<Play size={15} className="ml-0.5 text-emerald-600" />}
+                iconBg="bg-emerald-500/15"
+                title={t.name}
+                subtitle={`${t.exercises.reduce((n, e) => n + e.targetSets, 0)} sets · ${t.exercises.map((e) => e.exerciseName).join(", ")}`}
+                onClick={() => startWorkout(t)}
+                last={i === templates.length - 1}
+              />
             ))}
-          </div>
-        </div>
-      )}
-
-      <Sheet open={showForm} title="New template" onClose={() => setShowForm(false)}>
-        <TemplateForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
-      </Sheet>
-
-      <Sheet
-        open={editingId !== null}
-        title={editingTemplate ? `Edit ${editingTemplate.name}` : "Edit template"}
-        onClose={() => setEditingId(null)}
-      >
-        {editingTemplate && (
-          <TemplateForm
-            initialName={editingTemplate.name}
-            initialExercises={editingTemplate.exercises.map((e) => ({ exerciseName: e.exerciseName, targetSets: e.targetSets, targetRepsMin: e.targetRepsMin, targetRepsMax: e.targetRepsMax, restSeconds: e.restSeconds, intervalSeconds: e.intervalSeconds }))}
-            onSubmit={handleUpdate}
-            onCancel={() => setEditingId(null)}
-            submitLabel="Save changes"
-          />
+          </List>
         )}
-      </Sheet>
+      </div>
     </div>
   );
 }

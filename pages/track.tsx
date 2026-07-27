@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import PageHeader from "@/components/ui/PageHeader";
+import NavBar from "@/components/ui/NavBar";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -80,7 +80,7 @@ export default function TrackPage() {
     <div className="animate-fade-in">
       {/* Titled "Body" to match the tab that leads here — a destination whose
           name changes on arrival makes you re-orient every time. */}
-      <PageHeader title="Body" subtitle="Weight, height and body fat." />
+      <NavBar title="Body" subtitle="Weight, height and body fat." />
 
       <div role="tablist" className="glass-subtle mb-6 flex gap-1 rounded-full p-1">
         {METRIC_OPTIONS.map((opt) => (

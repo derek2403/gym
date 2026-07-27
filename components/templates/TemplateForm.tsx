@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, type MutableRefObject } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
@@ -24,6 +24,11 @@ interface TemplateFormProps {
   onSubmit: (name: string, exercises: Exercise[]) => void;
   onCancel: () => void;
   submitLabel?: string;
+  /** Hide the in-form buttons when the presenting container owns the actions. */
+  hideActions?: boolean;
+  /** Receives the submit handler so a sheet's Done button can drive it while
+   *  validation stays here with the fields it validates. */
+  submitRef?: MutableRefObject<(() => void) | null>;
 }
 
 export default function TemplateForm({
@@ -32,6 +37,8 @@ export default function TemplateForm({
   onSubmit,
   onCancel,
   submitLabel = "Create template",
+  hideActions,
+  submitRef,
 }: TemplateFormProps) {
   const [name, setName] = useState(initialName);
   const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
@@ -67,8 +74,17 @@ export default function TemplateForm({
     onSubmit(name, valid);
   };
 
+  // Keep the exposed handler pointing at the current state, not the first render.
+  useEffect(() => {
+    if (!submitRef) return;
+    submitRef.current = handleSubmit;
+    return () => {
+      submitRef.current = null;
+    };
+  });
+
   return (
-    <div className="animate-fade-in space-y-4">
+    <div className="space-y-4">
       <div>
         <Input
           label="Template name"
@@ -166,10 +182,12 @@ export default function TemplateForm({
         Add exercise
       </button>
 
-      <div className="flex gap-3 pt-2">
-        <Button variant="glass" onClick={onCancel} className="flex-1">Cancel</Button>
-        <Button onClick={handleSubmit} className="flex-1">{submitLabel}</Button>
-      </div>
+      {!hideActions && (
+        <div className="flex gap-3 pt-2">
+          <Button variant="glass" onClick={onCancel} className="flex-1">Cancel</Button>
+          <Button onClick={handleSubmit} className="flex-1">{submitLabel}</Button>
+        </div>
+      )}
     </div>
   );
 }
