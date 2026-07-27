@@ -53,8 +53,8 @@ export default function NavBar({ title, subtitle, actions, leading }: NavBarProp
   return (
     <>
       <div
-        className="pointer-events-none fixed inset-x-0 top-0 z-50 px-4"
-        style={{ paddingTop: "calc(0.5rem + env(safe-area-inset-top))" }}
+        className="pointer-events-none fixed inset-x-0 top-0 z-50 pl-4 pr-6"
+        style={{ paddingTop: "calc(1.125rem + env(safe-area-inset-top))" }}
       >
         <div className="relative mx-auto flex h-11 max-w-lg items-center justify-between gap-2">
           <div className="pointer-events-auto flex min-w-0 shrink-0 items-center">{leading}</div>
@@ -73,7 +73,7 @@ export default function NavBar({ title, subtitle, actions, leading }: NavBarProp
         </div>
       </div>
 
-      <div ref={largeRef} className="pt-[calc(4rem+env(safe-area-inset-top))]">
+      <div ref={largeRef} className="pt-[calc(4.75rem+env(safe-area-inset-top))]">
         <h1 className="text-display">{title}</h1>
         {subtitle && <p className="text-caption mt-1.5 pr-6">{subtitle}</p>}
       </div>
@@ -95,7 +95,7 @@ export function NavCircle({
     <button
       onClick={onClick}
       aria-label={label}
-      className="pressable chrome relative flex h-[2.375rem] w-[2.375rem] items-center justify-center rounded-full text-emerald-700"
+      className="pressable chrome relative flex h-11 w-11 items-center justify-center rounded-full text-emerald-700"
     >
       <span className="relative z-[2] flex items-center justify-center">{children}</span>
     </button>
@@ -119,7 +119,7 @@ export function NavAvatar({ name, onClick }: { name: string; onClick: () => void
     <button
       onClick={onClick}
       aria-label="Account"
-      className="pressable relative flex h-[2.375rem] w-[2.375rem] items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-[0.875rem] font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.12),0_4px_12px_-4px_rgba(16,185,129,0.5)] ring-[0.5px] ring-black/5"
+      className="pressable relative flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-[1rem] font-semibold text-white shadow-[0_1px_2px_rgba(0,0,0,0.12),0_5px_14px_-4px_rgba(16,185,129,0.5)] ring-[0.5px] ring-black/5"
     >
       {initials}
     </button>
