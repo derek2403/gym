@@ -3,14 +3,20 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import { Plus, Trash2, Timer, ArrowDownUp } from "lucide-react";
+import { normalizeRepRange } from "@/lib/utils";
+
+const NUM_FIELD = "w-full min-w-0 rounded-lg bg-black/[0.04] px-2 py-2 text-center text-[13px] text-black/75 outline-none focus:bg-black/[0.06]";
 
 interface Exercise {
   exerciseName: string;
   targetSets: number;
-  targetReps: number;
+  targetRepsMin: number;
+  targetRepsMax: number;
   restSeconds: number;
   intervalSeconds: number;
 }
+
+const BLANK_EXERCISE: Exercise = { exerciseName: "", targetSets: 3, targetRepsMin: 8, targetRepsMax: 12, restSeconds: 90, intervalSeconds: 120 };
 
 interface TemplateFormProps {
   initialName?: string;
@@ -22,7 +28,7 @@ interface TemplateFormProps {
 
 export default function TemplateForm({
   initialName = "",
-  initialExercises = [{ exerciseName: "", targetSets: 3, targetReps: 10, restSeconds: 90, intervalSeconds: 120 }],
+  initialExercises = [BLANK_EXERCISE],
   onSubmit,
   onCancel,
   submitLabel = "Create template",
@@ -35,7 +41,7 @@ export default function TemplateForm({
   };
 
   const addExercise = () => {
-    setExercises((prev) => [...prev, { exerciseName: "", targetSets: 3, targetReps: 10, restSeconds: 90, intervalSeconds: 120 }]);
+    setExercises((prev) => [...prev, BLANK_EXERCISE]);
   };
 
   const removeExercise = (i: number) => {
@@ -43,9 +49,15 @@ export default function TemplateForm({
     setExercises((prev) => prev.filter((_, idx) => idx !== i));
   };
 
+  // Keep the range coherent once the user leaves the field, so a max below the
+  // min never reaches the API.
+  const clampRange = (i: number) => {
+    setExercises((prev) => prev.map((e, idx) => (idx === i ? { ...e, ...normalizeRepRange(e) } : e)));
+  };
+
   const handleSubmit = () => {
     if (!name.trim()) return;
-    const valid = exercises.filter((e) => e.exerciseName.trim());
+    const valid = exercises.filter((e) => e.exerciseName.trim()).map((e) => ({ ...e, ...normalizeRepRange(e) }));
     if (!valid.length) return;
     onSubmit(name, valid);
   };
@@ -66,25 +78,56 @@ export default function TemplateForm({
                   value={ex.exerciseName}
                   onChange={(e) => updateExercise(i, "exerciseName", e.target.value)}
                 />
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="mb-1 flex items-center gap-1 text-[10px] text-black/20">Sets</span>
+                    <input
+                      type="number"
+                      className={NUM_FIELD}
+                      value={ex.targetSets}
+                      onChange={(e) => updateExercise(i, "targetSets", Number(e.target.value))}
+                      min={1}
+                    />
+                  </div>
+                  <div>
+                    <span className="mb-1 flex items-center gap-1 text-[10px] text-black/20">Rep range</span>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="number"
+                        className={NUM_FIELD}
+                        value={ex.targetRepsMin}
+                        onChange={(e) => updateExercise(i, "targetRepsMin", Number(e.target.value))}
+                        onBlur={() => clampRange(i)}
+                        min={1}
+                      />
+                      <span className="text-[12px] text-black/15">–</span>
+                      <input
+                        type="number"
+                        className={NUM_FIELD}
+                        value={ex.targetRepsMax}
+                        onChange={(e) => updateExercise(i, "targetRepsMax", Number(e.target.value))}
+                        onBlur={() => clampRange(i)}
+                        min={ex.targetRepsMin}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: "Sets", field: "targetSets" as const, val: ex.targetSets },
-                    { label: "Reps", field: "targetReps" as const, val: ex.targetReps },
-                    { label: "Rest", field: "restSeconds" as const, val: ex.restSeconds },
-                    { label: "Next", field: "intervalSeconds" as const, val: ex.intervalSeconds },
-                  ].map(({ label, field, val }) => (
+                    { label: "Rest", field: "restSeconds" as const, val: ex.restSeconds, icon: <Timer size={8} /> },
+                    { label: "Next", field: "intervalSeconds" as const, val: ex.intervalSeconds, icon: <ArrowDownUp size={8} /> },
+                  ].map(({ label, field, val, icon }) => (
                     <div key={field}>
                       <span className="mb-1 flex items-center gap-1 text-[10px] text-black/20">
-                        {field === "restSeconds" && <Timer size={8} />}
-                        {field === "intervalSeconds" && <ArrowDownUp size={8} />}
+                        {icon}
                         {label}
                       </span>
                       <input
                         type="number"
-                        className="w-full rounded-lg bg-black/[0.04] px-2 py-2 text-center text-[13px] text-black/75 outline-none focus:bg-black/[0.06]"
+                        className={NUM_FIELD}
                         value={val}
                         onChange={(e) => updateExercise(i, field, Number(e.target.value))}
-                        min={field === "targetSets" || field === "targetReps" ? 1 : 0}
+                        min={0}
                       />
                     </div>
                   ))}

@@ -1,10 +1,18 @@
 import Card from "@/components/ui/Card";
 import { Dumbbell, Pencil, Trash2 } from "lucide-react";
+import { formatRepRange } from "@/lib/utils";
+
+interface TemplateCardExercise {
+  exerciseName: string;
+  targetSets: number;
+  targetRepsMin: number;
+  targetRepsMax: number;
+}
 
 interface TemplateCardProps {
   name: string;
   exerciseCount: number;
-  exercises: string[];
+  exercises: TemplateCardExercise[];
   onEdit: () => void;
   onDelete: () => void;
 }
@@ -33,9 +41,12 @@ export default function TemplateCard({ name, exerciseCount, exercises, onEdit, o
       </div>
       {exercises.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {exercises.map((name, i) => (
+          {exercises.map((ex, i) => (
             <span key={i} className="rounded-full bg-black/[0.04] px-3 py-1 text-[11px] font-medium text-black/25">
-              {name}
+              {ex.exerciseName}
+              <span className="ml-1.5 text-black/15">
+                {ex.targetSets}×{formatRepRange(ex.targetRepsMin, ex.targetRepsMax)}
+              </span>
             </span>
           ))}
         </div>

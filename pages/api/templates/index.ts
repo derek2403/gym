@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { exerciseTemplates, templateExercises } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth";
+import { normalizeRepRange, type TemplateExerciseInput } from "@/lib/utils";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const userId = requireAuth(req, res);
@@ -18,13 +19,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "POST") {
-    const { name, exercises } = req.body as { name: string; exercises: { exerciseName: string; targetSets: number; targetReps: number; restSeconds?: number; intervalSeconds?: number }[] };
+    const { name, exercises } = req.body as { name: string; exercises: TemplateExerciseInput[] };
     if (!name?.trim()) return res.status(400).json({ error: "Name is required" });
 
     const template = db.insert(exerciseTemplates).values({ userId, name: name.trim() }).returning().all()[0];
     if (exercises?.length) {
       db.insert(templateExercises).values(exercises.map((e, i) => ({
-        templateId: template.id, exerciseName: e.exerciseName, targetSets: e.targetSets || 3, targetReps: e.targetReps || 10, restSeconds: e.restSeconds ?? 90, intervalSeconds: e.intervalSeconds ?? 120, sortOrder: i,
+        templateId: template.id, exerciseName: e.exerciseName, targetSets: e.targetSets || 3, ...normalizeRepRange(e), restSeconds: e.restSeconds ?? 90, intervalSeconds: e.intervalSeconds ?? 120, sortOrder: i,
       }))).run();
     }
     const allExercises = db.select().from(templateExercises).where(eq(templateExercises.templateId, template.id)).all();

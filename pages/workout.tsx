@@ -7,9 +7,10 @@ import RestTimer from "@/components/workout/RestTimer";
 import TemplateCard from "@/components/templates/TemplateCard";
 import TemplateForm from "@/components/templates/TemplateForm";
 import { Dumbbell, Play, Check, Plus, X, ArrowDownUp } from "lucide-react";
+import { formatRepRange } from "@/lib/utils";
 
 interface TemplateExercise {
-  id: number; exerciseName: string; targetSets: number; targetReps: number;
+  id: number; exerciseName: string; targetSets: number; targetRepsMin: number; targetRepsMax: number;
   restSeconds: number; intervalSeconds: number; sortOrder: number;
 }
 interface Template { id: number; name: string; exercises: TemplateExercise[]; }
@@ -38,7 +39,18 @@ function loadWorkoutState(): WorkoutState | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(WORKOUT_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const state = JSON.parse(raw) as WorkoutState;
+    // Workouts started before rep ranges stored a single targetReps.
+    state.activeExercises = (state.activeExercises ?? []).map((ex) => {
+      const legacy = (ex as TemplateExercise & { targetReps?: number }).targetReps;
+      return {
+        ...ex,
+        targetRepsMin: ex.targetRepsMin ?? legacy ?? 8,
+        targetRepsMax: ex.targetRepsMax ?? legacy ?? 12,
+      };
+    });
+    return state;
   } catch { return null; }
 }
 
@@ -80,7 +92,7 @@ export default function WorkoutPage() {
     setActiveTemplateName(template.name);
     setActiveExercises(template.exercises);
     const initialSets: SetEntry[] = [];
-    template.exercises.forEach((ex) => { for (let s = 1; s <= ex.targetSets; s++) initialSets.push({ exerciseName: ex.exerciseName, setNumber: s, weightKg: 0, reps: ex.targetReps, completed: false }); });
+    template.exercises.forEach((ex) => { for (let s = 1; s <= ex.targetSets; s++) initialSets.push({ exerciseName: ex.exerciseName, setNumber: s, weightKg: 0, reps: ex.targetRepsMin, completed: false }); });
     setSets(initialSets);
   };
 
@@ -109,7 +121,8 @@ export default function WorkoutPage() {
     const ex = sets.filter((s) => s.exerciseName === exerciseName);
     const last = ex[ex.length - 1];
     const idx = sets.findLastIndex((s) => s.exerciseName === exerciseName) + 1;
-    setSets((prev) => [...prev.slice(0, idx), { exerciseName, setNumber: ex.length + 1, weightKg: last?.weightKg || 0, reps: last?.reps || 10, completed: false }, ...prev.slice(idx)]);
+    const fallbackReps = activeExercises.find((e) => e.exerciseName === exerciseName)?.targetRepsMin ?? 10;
+    setSets((prev) => [...prev.slice(0, idx), { exerciseName, setNumber: ex.length + 1, weightKg: last?.weightKg || 0, reps: last?.reps || fallbackReps, completed: false }, ...prev.slice(idx)]);
   };
 
   const finishWorkout = async () => {
@@ -132,6 +145,13 @@ export default function WorkoutPage() {
   const completedSets = sets.filter((s) => s.completed).length;
   const editingTemplate = templates.find((t) => t.id === editingId);
   const fmt = (s: number) => { const m = Math.floor(s / 60); const r = s % 60; return m > 0 ? `${m}m${r > 0 ? ` ${r}s` : ""}` : `${r}s`; };
+  // Amber = short of the range, emerald = topped it out (time to add weight).
+  const repTone = (reps: number, cfg?: TemplateExercise) => {
+    if (!cfg || !reps) return "text-black/85";
+    if (reps < cfg.targetRepsMin) return "text-amber-500";
+    if (reps >= cfg.targetRepsMax) return "text-emerald-500";
+    return "text-black/85";
+  };
 
   // ===== ACTIVE WORKOUT =====
   if (activeWorkoutId) {
@@ -173,13 +193,15 @@ export default function WorkoutPage() {
                     {config && <span className="text-caption">Rest {fmt(config.restSeconds)}</span>}
                   </div>
                   <div className="mb-3 grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_2.25rem] gap-3 text-overline">
-                    <span>Set</span><span>kg</span><span>Reps</span><span />
+                    <span>Set</span><span>kg</span>
+                    <span>Reps{config && <span className="ml-1 normal-case text-black/15">target {formatRepRange(config.targetRepsMin, config.targetRepsMax)}</span>}</span>
+                    <span />
                   </div>
                   {exSets.map((set) => (
                     <div key={set.oi} className={`mb-2 grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_2.25rem] items-center gap-3 ${set.completed ? "opacity-30" : ""}`}>
                       <span className="text-center text-[14px] font-medium text-black/20">{set.setNumber}</span>
                       <input type="number" className="rounded-xl bg-black/[0.04] px-2 py-2.5 text-center text-[15px] tracking-tight text-black/85 outline-none focus:bg-black/[0.06]" value={set.weightKg || ""} onChange={(e) => updateSet(set.oi, "weightKg", Number(e.target.value))} disabled={set.completed} placeholder="0" />
-                      <input type="number" className="rounded-xl bg-black/[0.04] px-2 py-2.5 text-center text-[15px] tracking-tight text-black/85 outline-none focus:bg-black/[0.06]" value={set.reps || ""} onChange={(e) => updateSet(set.oi, "reps", Number(e.target.value))} disabled={set.completed} placeholder="0" />
+                      <input type="number" className={`rounded-xl bg-black/[0.04] px-2 py-2.5 text-center text-[15px] tracking-tight outline-none focus:bg-black/[0.06] ${repTone(set.reps, config)}`} value={set.reps || ""} onChange={(e) => updateSet(set.oi, "reps", Number(e.target.value))} disabled={set.completed} placeholder={String(config?.targetRepsMin ?? 0)} />
                       <button onClick={() => completeSet(set.oi)} disabled={set.completed} className={`flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-200 ${set.completed ? "bg-emerald-500/15 text-emerald-400" : "bg-black/[0.04] text-black/20 hover:bg-emerald-500 hover:text-black/70"}`}>
                         <Check size={13} />
                       </button>
@@ -257,7 +279,7 @@ export default function WorkoutPage() {
           {showForm && <TemplateForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />}
           {editingId && editingTemplate && (
             <TemplateForm initialName={editingTemplate.name}
-              initialExercises={editingTemplate.exercises.map((e) => ({ exerciseName: e.exerciseName, targetSets: e.targetSets, targetReps: e.targetReps, restSeconds: e.restSeconds, intervalSeconds: e.intervalSeconds }))}
+              initialExercises={editingTemplate.exercises.map((e) => ({ exerciseName: e.exerciseName, targetSets: e.targetSets, targetRepsMin: e.targetRepsMin, targetRepsMax: e.targetRepsMax, restSeconds: e.restSeconds, intervalSeconds: e.intervalSeconds }))}
               onSubmit={handleUpdate} onCancel={() => setEditingId(null)} submitLabel="Save changes" />
           )}
           {!showForm && !editingId && (
@@ -270,7 +292,7 @@ export default function WorkoutPage() {
                   <p className="text-caption">No templates yet</p>
                 </div>
               ) : templates.map((t) => (
-                <TemplateCard key={t.id} name={t.name} exerciseCount={t.exercises.length} exercises={t.exercises.map((e) => e.exerciseName)} onEdit={() => setEditingId(t.id)} onDelete={() => handleDelete(t.id)} />
+                <TemplateCard key={t.id} name={t.name} exerciseCount={t.exercises.length} exercises={t.exercises} onEdit={() => setEditingId(t.id)} onDelete={() => handleDelete(t.id)} />
               ))}
             </div>
           )}

@@ -9,11 +9,14 @@ interface Exercise {
   id: number;
   exerciseName: string;
   targetSets: number;
-  targetReps: number;
+  targetRepsMin: number;
+  targetRepsMax: number;
   restSeconds: number;
   intervalSeconds: number;
   sortOrder: number;
 }
+
+type ExerciseInput = Omit<Exercise, "id" | "sortOrder">;
 
 interface Template {
   id: number;
@@ -35,7 +38,7 @@ export default function TemplatesPage() {
     fetchTemplates();
   }, [fetchTemplates]);
 
-  const handleCreate = async (name: string, exercises: { exerciseName: string; targetSets: number; targetReps: number; restSeconds: number; intervalSeconds: number }[]) => {
+  const handleCreate = async (name: string, exercises: ExerciseInput[]) => {
     await fetch("/api/templates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -45,7 +48,7 @@ export default function TemplatesPage() {
     fetchTemplates();
   };
 
-  const handleUpdate = async (name: string, exercises: { exerciseName: string; targetSets: number; targetReps: number; restSeconds: number; intervalSeconds: number }[]) => {
+  const handleUpdate = async (name: string, exercises: ExerciseInput[]) => {
     await fetch(`/api/templates/${editingId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -90,7 +93,8 @@ export default function TemplatesPage() {
           initialExercises={editingTemplate.exercises.map((e) => ({
             exerciseName: e.exerciseName,
             targetSets: e.targetSets,
-            targetReps: e.targetReps,
+            targetRepsMin: e.targetRepsMin,
+            targetRepsMax: e.targetRepsMax,
             restSeconds: e.restSeconds,
             intervalSeconds: e.intervalSeconds,
           }))}
@@ -117,7 +121,7 @@ export default function TemplatesPage() {
                 key={t.id}
                 name={t.name}
                 exerciseCount={t.exercises.length}
-                exercises={t.exercises.map((e) => e.exerciseName)}
+                exercises={t.exercises}
                 onEdit={() => setEditingId(t.id)}
                 onDelete={() => handleDelete(t.id)}
               />

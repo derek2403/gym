@@ -50,3 +50,22 @@ export function getDaysAgo(days: number): string {
 export function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
 }
+
+export interface TemplateExerciseInput {
+  exerciseName: string;
+  targetSets: number;
+  targetRepsMin?: number;
+  targetRepsMax?: number;
+  restSeconds?: number;
+  intervalSeconds?: number;
+}
+
+export function normalizeRepRange(e: { targetRepsMin?: number; targetRepsMax?: number }): { targetRepsMin: number; targetRepsMax: number } {
+  const min = Math.max(1, Math.round(e.targetRepsMin || 8));
+  const max = Math.max(min, Math.round(e.targetRepsMax || 12));
+  return { targetRepsMin: min, targetRepsMax: max };
+}
+
+export function formatRepRange(min: number, max: number): string {
+  return min === max ? `${min}` : `${min}–${max}`;
+}
