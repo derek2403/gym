@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import NavBar from "@/components/ui/NavBar";
+import NavBar, { NavAvatar } from "@/components/ui/NavBar";
+import AccountSheet from "@/components/AccountSheet";
 import { List, ListRow } from "@/components/ui/List";
 import WeekStrip from "@/components/home/WeekStrip";
 import { BarChart3, Ruler, Flame, Play, Dumbbell, TrendingUp } from "lucide-react";
@@ -28,6 +29,7 @@ export default function TodayPage() {
   const { user } = useAuth();
   const firstName = user?.name?.split(" ")[0] || "";
   const [stats, setStats] = useState<Stats>(EMPTY);
+  const [showAccount, setShowAccount] = useState(false);
 
   useEffect(() => {
     fetch("/api/stats")
@@ -44,7 +46,11 @@ export default function TodayPage() {
 
   return (
     <div>
-      <NavBar title="Today" subtitle={`${dateStr}${firstName ? ` · ${greeting}, ${firstName}` : ""}`} />
+      <NavBar
+        title="Today"
+        subtitle={`${dateStr}${firstName ? ` · ${greeting}, ${firstName}` : ""}`}
+        actions={<NavAvatar name={user?.name || "?"} onClick={() => setShowAccount(true)} />}
+      />
 
       <div className="mt-6">
         {/* The one thing this app exists to do, given the most weight on the
@@ -109,6 +115,8 @@ export default function TodayPage() {
           />
         </List>
       </div>
+
+      <AccountSheet open={showAccount} onClose={() => setShowAccount(false)} />
     </div>
   );
 }

@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
-import NavBar, { NavAction } from "@/components/ui/NavBar";
+import NavBar, { NavCircle, NavAvatar } from "@/components/ui/NavBar";
+import AccountSheet from "@/components/AccountSheet";
+import { useAuth } from "./_app";
 import { List, ListRow } from "@/components/ui/List";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import RestTimer from "@/components/workout/RestTimer";
-import { Dumbbell, Play, Check, Plus, X, ArrowDownUp } from "lucide-react";
+import { Dumbbell, Play, Check, Plus, X, ArrowDownUp, LayoutList } from "lucide-react";
 import { formatRepRange } from "@/lib/utils";
 
 interface TemplateExercise {
@@ -53,6 +55,8 @@ function loadWorkoutState(): WorkoutState | null {
 
 export default function WorkoutPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [showAccount, setShowAccount] = useState(false);
   const saved = loadWorkoutState();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [activeWorkoutId, setActiveWorkoutId] = useState<number | null>(saved?.activeWorkoutId ?? null);
@@ -276,7 +280,14 @@ export default function WorkoutPage() {
     <div>
       <NavBar
         title="Workout"
-        trailing={<NavAction onClick={() => router.push("/templates")}>Templates</NavAction>}
+        actions={
+          <>
+            <NavCircle onClick={() => router.push("/templates")} label="Templates">
+              <LayoutList size={18} strokeWidth={2.1} />
+            </NavCircle>
+            <NavAvatar name={user?.name || "?"} onClick={() => setShowAccount(true)} />
+          </>
+        }
       />
 
       <div className="mt-6">
@@ -316,6 +327,8 @@ export default function WorkoutPage() {
           </List>
         )}
       </div>
+
+      <AccountSheet open={showAccount} onClose={() => setShowAccount(false)} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
-import NavBar, { NavAction } from "@/components/ui/NavBar";
+import NavBar, { NavCircle } from "@/components/ui/NavBar";
 import Sheet from "@/components/ui/Sheet";
 import SwipeRow from "@/components/ui/SwipeRow";
 import TemplateCard from "@/components/templates/TemplateCard";
@@ -75,15 +75,14 @@ export default function TemplatesPage() {
       <NavBar
         title="Templates"
         leading={
-          <NavAction onClick={() => router.push("/workout")}>
-            <ChevronLeft size={18} strokeWidth={2.6} className="-ml-1" />
-            Workout
-          </NavAction>
+          <NavCircle onClick={() => router.push("/workout")} label="Back to Workout">
+            <ChevronLeft size={20} strokeWidth={2.6} />
+          </NavCircle>
         }
-        trailing={
-          <NavAction onClick={() => setShowForm(true)} label="New template" prominent>
+        actions={
+          <NavCircle onClick={() => setShowForm(true)} label="New template">
             <Plus size={20} strokeWidth={2.5} />
-          </NavAction>
+          </NavCircle>
         }
       />
 

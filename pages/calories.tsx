@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import NavBar, { NavAction } from "@/components/ui/NavBar";
+import NavBar, { NavCircle } from "@/components/ui/NavBar";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -322,10 +322,10 @@ export default function CaloriesPage() {
       <NavBar
         title="Calories"
         subtitle="Estimates run high on purpose — log a quantity for the tightest numbers."
-        trailing={
-          <NavAction onClick={() => setShowSetup(true)} label="Calorie settings" prominent>
+        actions={
+          <NavCircle onClick={() => setShowSetup(true)} label="Calorie settings">
             <Settings size={18} />
-          </NavAction>
+          </NavCircle>
         }
       />
 

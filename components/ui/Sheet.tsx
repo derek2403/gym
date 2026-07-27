@@ -150,7 +150,7 @@ export default function Sheet({ open, title, onClose, children, confirm }: Sheet
       <div
         ref={scrimRef}
         onClick={onClose}
-        className="absolute inset-0 bg-black/25 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/30 backdrop-blur-[3px]"
         style={{ opacity: 0 }}
       />
 
