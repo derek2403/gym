@@ -1,22 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import NavBar, { NavCircle } from "@/components/ui/NavBar";
+import NavBar, { NavAvatar } from "@/components/ui/NavBar";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import CalorieRing from "@/components/calories/CalorieRing";
 import MacroBar from "@/components/calories/MacroBar";
-import ProfileSetup from "@/components/calories/ProfileSetup";
-import { Settings, ChevronLeft, ChevronRight, Loader2, Sparkles, Camera, PenLine } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Sparkles, Camera, PenLine, Target } from "lucide-react";
 import SwipeRow from "@/components/ui/SwipeRow";
+import { useAccountUI } from "@/components/account/AccountProvider";
+import { useAuth } from "@/pages/_app";
 import { todayStr, formatDateDisplay, formatDate, formatDateShort } from "@/lib/utils";
-import { calculateTDEE, calculateGoalCalories, getMacroTargets, type Sex, type ActivityLevel, type GoalType } from "@/lib/formulas";
+import { getMacroTargets, type GoalType } from "@/lib/formulas";
 
 interface Profile {
-  age: number;
-  sex: string;
-  heightCm: number;
-  weightKg: number;
-  activityLevel: string;
   calorieGoal: number;
   goalType: string;
 }
@@ -68,8 +64,9 @@ function getWeekRange(dateStr: string): { start: string; end: string } {
 }
 
 export default function CaloriesPage() {
+  const { openAccount, openProfile, profileVersion } = useAccountUI();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [showSetup, setShowSetup] = useState(false);
   const [date, setDate] = useState(todayStr());
   const [entries, setEntries] = useState<FoodEntry[]>([]);
   const [foodInput, setFoodInput] = useState("");
@@ -91,10 +88,8 @@ export default function CaloriesPage() {
 
   const fetchProfile = useCallback(async () => {
     const res = await fetch("/api/profile");
-    const data = await res.json();
-    setProfile(data);
+    setProfile(await res.json());
     setProfileLoaded(true);
-    if (!data) setShowSetup(true);
   }, []);
 
   const fetchEntries = useCallback(async () => {
@@ -110,40 +105,15 @@ export default function CaloriesPage() {
     setWeeklyData(await res.json());
   }, [date]);
 
+  // profileVersion bumps when the account sheet saves — refetch the new goal.
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]);
+  }, [fetchProfile, profileVersion]);
 
   useEffect(() => {
     if (viewMode === "daily") fetchEntries();
     else fetchWeekly();
   }, [viewMode, fetchEntries, fetchWeekly]);
-
-  const saveProfile = async (data: {
-    age: number;
-    sex: string;
-    heightCm: number;
-    weightKg: number;
-    activityLevel: string;
-    goalType: string;
-  }) => {
-    const tdee = calculateTDEE(
-      data.weightKg,
-      data.heightCm,
-      data.age,
-      data.sex as Sex,
-      data.activityLevel as ActivityLevel
-    );
-    const calorieGoal = calculateGoalCalories(tdee, data.goalType as GoalType);
-
-    await fetch("/api/profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...data, calorieGoal }),
-    });
-    setShowSetup(false);
-    fetchProfile();
-  };
 
   const analyzeAndAdd = async () => {
     if (!foodInput.trim()) return;
@@ -304,30 +274,32 @@ export default function CaloriesPage() {
     return <div className="flex h-64 items-center justify-center text-[color:var(--ink-quaternary)]">Loading...</div>;
   }
 
-  if (showSetup) {
-    return (
-      <div>
-        <NavBar title="Calories" subtitle="Set up your profile to get started." />
-        <ProfileSetup
-          initial={profile ? { ...profile, sex: profile.sex || "male" } : undefined}
-          onSave={saveProfile}
-          onCancel={profile ? () => setShowSetup(false) : undefined}
-        />
-      </div>
-    );
-  }
-
   return (
     <div>
       <NavBar
         title="Calories"
         subtitle="Estimates run high on purpose — log a quantity for the tightest numbers."
-        actions={
-          <NavCircle onClick={() => setShowSetup(true)} label="Calorie settings">
-            <Settings size={18} />
-          </NavCircle>
-        }
+        actions={<NavAvatar name={user?.name || "?"} onClick={openAccount} />}
       />
+
+      {/* No profile yet — the target lives in the account sheet, so point there.
+          Logging still works below: entries and input don't need a goal. */}
+      {!profile && (
+        <Card className="mt-5">
+          <div className="flex flex-col items-center py-4 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15">
+              <Target size={22} className="text-emerald-600" />
+            </div>
+            <h3 className="text-title-sm">No calorie target yet</h3>
+            <p className="text-caption mt-1 max-w-[17rem]">
+              Your daily target is calculated from your age, height and weight.
+            </p>
+            <Button size="sm" className="mt-4" onClick={openProfile}>
+              Set up profile
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* View mode toggle */}
       <div className="mb-4 mt-5 flex gap-1 rounded-2xl bg-[rgba(120,120,128,0.09)] p-0.5">
@@ -363,19 +335,22 @@ export default function CaloriesPage() {
       {/* ===== WEEKLY VIEW ===== */}
       {viewMode === "weekly" && weeklyData && (
         <>
-          <Card className="mb-4">
-            <div className="relative flex justify-center py-2">
-              <CalorieRing consumed={Math.round(weeklyData.totals.calories)} target={weeklyCalorieTarget} />
-            </div>
-            <div className="mt-4 space-y-3">
-              <MacroBar label="Protein" current={weeklyData.totals.proteinG} target={macroTargets.proteinG * 7} color="#10b981" />
-              <MacroBar label="Carbs" current={weeklyData.totals.carbsG} target={macroTargets.carbsG * 7} color="#3b82f6" />
-              <MacroBar label="Fat" current={weeklyData.totals.fatG} target={macroTargets.fatG * 7} color="#f59e0b" />
-            </div>
-          </Card>
+          {profile && (
+            <Card className="mb-4">
+              <div className="relative flex justify-center py-2">
+                <CalorieRing consumed={Math.round(weeklyData.totals.calories)} target={weeklyCalorieTarget} />
+              </div>
+              <div className="mt-4 space-y-3">
+                <MacroBar label="Protein" current={weeklyData.totals.proteinG} target={macroTargets.proteinG * 7} color="#10b981" />
+                <MacroBar label="Carbs" current={weeklyData.totals.carbsG} target={macroTargets.carbsG * 7} color="#3b82f6" />
+                <MacroBar label="Fat" current={weeklyData.totals.fatG} target={macroTargets.fatG * 7} color="#f59e0b" />
+              </div>
+            </Card>
+          )}
 
-          {/* Weekly deficit/surplus */}
-          <Card className="mb-4">
+          {/* Weekly deficit/surplus — meaningless without a real target, so it
+              only renders once a goal exists. */}
+          {profile && <Card className="mb-4">
             <div className="flex items-center justify-between">
               <h3 className="text-[15px] font-semibold text-[color:var(--ink)]">Weekly summary</h3>
               <span className="tabular-nums text-[13px] text-[color:var(--ink-quaternary)]">
@@ -437,24 +412,26 @@ export default function CaloriesPage() {
                 );
               })}
             </div>
-          </Card>
+          </Card>}
         </>
       )}
 
       {/* ===== DAILY VIEW ===== */}
       {viewMode === "daily" && (
         <>
-          {/* Calorie ring + macros */}
-          <Card className="mb-4">
-            <div className="relative flex justify-center py-2">
-              <CalorieRing consumed={Math.round(totals.calories)} target={calorieTarget} />
-            </div>
-            <div className="mt-4 space-y-3">
-              <MacroBar label="Protein" current={totals.protein} target={macroTargets.proteinG} color="#10b981" />
-              <MacroBar label="Carbs" current={totals.carbs} target={macroTargets.carbsG} color="#3b82f6" />
-              <MacroBar label="Fat" current={totals.fat} target={macroTargets.fatG} color="#f59e0b" />
-            </div>
-          </Card>
+          {/* Calorie ring + macros — only meaningful with a target */}
+          {profile && (
+            <Card className="mb-4">
+              <div className="relative flex justify-center py-2">
+                <CalorieRing consumed={Math.round(totals.calories)} target={calorieTarget} />
+              </div>
+              <div className="mt-4 space-y-3">
+                <MacroBar label="Protein" current={totals.protein} target={macroTargets.proteinG} color="#10b981" />
+                <MacroBar label="Carbs" current={totals.carbs} target={macroTargets.carbsG} color="#3b82f6" />
+                <MacroBar label="Fat" current={totals.fat} target={macroTargets.fatG} color="#f59e0b" />
+              </div>
+            </Card>
+          )}
 
           {/* Food input */}
           <Card className="mb-4">

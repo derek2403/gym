@@ -8,6 +8,11 @@ interface SheetProps {
   children: ReactNode;
   /** Confirm action for the modal's nav bar. Without it the bar shows only Cancel. */
   confirm?: { label: string; onConfirm: () => void; disabled?: boolean };
+  /** Leading button label; defaults to "Cancel". */
+  cancelLabel?: string;
+  /** Leading button action. Defaults to onClose — pass a handler to navigate
+   *  within the sheet (e.g. "Back" to a parent view) instead of dismissing. */
+  onCancel?: () => void;
 }
 
 // Drawer feel from the skill's table: a little bounce, because the motion is
@@ -17,7 +22,7 @@ const RESPONSE = 0.3;
 // Past this projected point the sheet is going away, however far it actually is.
 const DISMISS_RATIO = 0.4;
 
-export default function Sheet({ open, title, onClose, children, confirm }: SheetProps) {
+export default function Sheet({ open, title, onClose, children, confirm, cancelLabel = "Cancel", onCancel }: SheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const scrimRef = useRef<HTMLDivElement>(null);
   const springRef = useRef<SpringHandle | null>(null);
@@ -94,6 +99,18 @@ export default function Sheet({ open, title, onClose, children, confirm }: Sheet
     return () => window.removeEventListener("keydown", onKey);
   }, [mounted, onClose]);
 
+  // When the sheet swaps views in place (title change), the previously focused
+  // control unmounts and focus falls to <body> — outside the modal. Catch it
+  // and hand focus to the panel so keyboard and screen-reader users stay in.
+  useEffect(() => {
+    if (!mounted) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    if (!panel.contains(document.activeElement)) {
+      panel.focus();
+    }
+  }, [mounted, title]);
+
   const onPointerDown = (e: React.PointerEvent) => {
     const panel = panelRef.current;
     if (!panel) return;
@@ -156,7 +173,8 @@ export default function Sheet({ open, title, onClose, children, confirm }: Sheet
 
       <div
         ref={panelRef}
-        className="glass-elevated relative mx-auto w-full max-w-lg rounded-t-[var(--radius-sheet)] pb-8 will-change-transform"
+        tabIndex={-1}
+        className="glass-elevated relative mx-auto w-full max-w-lg rounded-t-[var(--radius-sheet)] pb-8 outline-none will-change-transform"
         style={{ transform: "translate3d(0, 100%, 0)", maxHeight: "90vh" }}
       >
         {/* The grabber and the whole bar are the drag area — a 44pt target,
@@ -174,10 +192,10 @@ export default function Sheet({ open, title, onClose, children, confirm }: Sheet
               the middle. Same geometry as every other modal on the platform. */}
           <div className="relative z-[2] mt-2 flex h-11 items-center justify-between gap-2 px-4">
             <button
-              onClick={onClose}
+              onClick={onCancel ?? onClose}
               className="pressable -mx-2 shrink-0 rounded-full px-2 py-1 text-[1.0625rem] text-emerald-600"
             >
-              Cancel
+              {cancelLabel}
             </button>
             <span className="min-w-0 flex-1 truncate text-center text-[1.0625rem] font-semibold tracking-[-0.02em]">
               {title}

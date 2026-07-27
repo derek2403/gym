@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useRef } from "react";
-import { CalendarDays, Flame, History, Ruler, Dumbbell } from "lucide-react";
+import { CalendarDays, Flame, TrendingUp, Dumbbell } from "lucide-react";
 
 /**
  * A floating glass tab bar.
@@ -17,8 +17,7 @@ const tabs = [
   { href: "/", label: "Today", icon: CalendarDays },
   { href: "/workout", label: "Workout", icon: Dumbbell },
   { href: "/calories", label: "Calories", icon: Flame },
-  { href: "/history", label: "History", icon: History },
-  { href: "/track", label: "Body", icon: Ruler },
+  { href: "/progress", label: "Progress", icon: TrendingUp },
 ];
 
 export default function BottomNav() {

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import NavBar, { NavAvatar } from "@/components/ui/NavBar";
-import AccountSheet from "@/components/AccountSheet";
 import { List, ListRow } from "@/components/ui/List";
 import WeekStrip from "@/components/home/WeekStrip";
-import { BarChart3, Ruler, Flame, Play, Dumbbell, TrendingUp } from "lucide-react";
-import { useAuth } from "./_app";
+import { useAccountUI } from "@/components/account/AccountProvider";
+import { BarChart3, Flame, Play, Dumbbell, Target, TrendingUp } from "lucide-react";
+import { useAuth } from "@/pages/_app";
 import { todayStr } from "@/lib/utils";
 
 interface CalendarDay {
@@ -22,14 +22,27 @@ interface Stats {
   calendarDays: CalendarDay[];
 }
 
+interface FoodEntry {
+  calories: number;
+}
+
+interface Profile {
+  calorieGoal: number;
+}
+
 const EMPTY: Stats = { weekSessions: 0, weekCompletedSets: 0, topLiftWeek: 0, currentStreak: 0, calendarDays: [] };
 
 export default function TodayPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { openAccount, openProfile, profileVersion } = useAccountUI();
   const firstName = user?.name?.split(" ")[0] || "";
   const [stats, setStats] = useState<Stats>(EMPTY);
-  const [showAccount, setShowAccount] = useState(false);
+  const [entries, setEntries] = useState<FoodEntry[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  const today = todayStr();
 
   useEffect(() => {
     fetch("/api/stats")
@@ -37,19 +50,35 @@ export default function TodayPage() {
       .then((s) => setStats({ ...EMPTY, ...s }));
   }, []);
 
+  // profileVersion bumps when the profile sheet saves, so the goal (and the
+  // "kcal left" math built on it) stays current without polling.
+  useEffect(() => {
+    fetch(`/api/food?date=${today}`)
+      .then((r) => r.json())
+      .then((data) => setEntries(Array.isArray(data) ? data : []));
+    fetch("/api/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        setProfile(data);
+        setProfileLoaded(true);
+      });
+  }, [today, profileVersion]);
+
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const h = now.getHours();
   const greeting = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-  const today = todayStr();
   const trainedToday = stats.calendarDays.some((d) => d.date === today && d.hasWorkout);
+
+  const consumed = Math.round(entries.reduce((sum, e) => sum + e.calories, 0));
+  const left = (profile?.calorieGoal ?? 0) - consumed;
 
   return (
     <div>
       <NavBar
         title="Today"
         subtitle={`${dateStr}${firstName ? ` · ${greeting}, ${firstName}` : ""}`}
-        actions={<NavAvatar name={user?.name || "?"} onClick={() => setShowAccount(true)} />}
+        actions={<NavAvatar name={user?.name || "?"} onClick={openAccount} />}
       />
 
       <div className="mt-6">
@@ -70,6 +99,31 @@ export default function TodayPage() {
           </span>
         </button>
 
+        {profileLoaded && (
+        <List header="Nutrition">
+          {profile?.calorieGoal ? (
+            <ListRow
+              icon={<Flame size={16} className="text-orange-600" />}
+              iconBg="bg-orange-500/15"
+              title="Calories"
+              subtitle={left >= 0 ? `${left} kcal left` : `${-left} kcal over`}
+              value={`${consumed} / ${profile.calorieGoal}`}
+              onClick={() => router.push("/calories")}
+              last
+            />
+          ) : (
+            <ListRow
+              icon={<Target size={16} className="text-emerald-600" />}
+              iconBg="bg-emerald-500/15"
+              title="Set a calorie goal"
+              subtitle="Daily target from your age, height and weight"
+              onClick={openProfile}
+              last
+            />
+          )}
+        </List>
+        )}
+
         <List
           header="This week"
           footer={
@@ -85,38 +139,7 @@ export default function TodayPage() {
           <ListRow icon={<BarChart3 size={16} className="text-blue-500" />} iconBg="bg-blue-500/15" title="Sets completed" value={stats.weekCompletedSets} chevron={false} />
           <ListRow icon={<TrendingUp size={16} className="text-amber-600" />} iconBg="bg-amber-500/15" title="Top lift" value={`${stats.topLiftWeek.toFixed(1)} kg`} chevron={false} last />
         </List>
-
-        <List header="Log">
-          <ListRow
-            icon={<Flame size={16} className="text-orange-600" />}
-            iconBg="bg-orange-500/15"
-            title="Calories"
-            subtitle="Food and macros"
-            onClick={() => router.push("/calories")}
-          />
-          <ListRow
-            icon={<Ruler size={16} className="text-purple-600" />}
-            iconBg="bg-purple-500/15"
-            title="Body"
-            subtitle="Weight, height and body fat"
-            onClick={() => router.push("/track")}
-            last
-          />
-        </List>
-
-        <List header="Review">
-          <ListRow
-            icon={<BarChart3 size={16} className="text-amber-600" />}
-            iconBg="bg-amber-500/15"
-            title="History"
-            subtitle="Past workouts and progression"
-            onClick={() => router.push("/history")}
-            last
-          />
-        </List>
       </div>
-
-      <AccountSheet open={showAccount} onClose={() => setShowAccount(false)} />
     </div>
   );
 }

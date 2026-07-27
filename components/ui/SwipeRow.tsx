@@ -7,6 +7,9 @@ interface SwipeRowProps {
   onDelete: () => void;
   /** Accessible name for the fallback delete button. */
   label?: string;
+  /** When false, a hard fling only reveals the action instead of deleting —
+   *  for rows whose deletion is confirmed rather than immediate. */
+  flingToDelete?: boolean;
 }
 
 const ACTION_WIDTH = 84;
@@ -16,7 +19,7 @@ const AXIS_THRESHOLD = 10;
 const DAMPING = 0.85;
 const RESPONSE = 0.3;
 
-export default function SwipeRow({ children, onDelete, label = "item" }: SwipeRowProps) {
+export default function SwipeRow({ children, onDelete, label = "item", flingToDelete = true }: SwipeRowProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const springRef = useRef<SpringHandle | null>(null);
   const tracker = useRef(new VelocityTracker());
@@ -114,7 +117,7 @@ export default function SwipeRow({ children, onDelete, label = "item" }: SwipeRo
 
     // A hard fling past the action deletes outright; otherwise snap to whichever
     // resting point the projection lands nearest.
-    if (projected < -d.width * 0.5) {
+    if (flingToDelete && projected < -d.width * 0.5) {
       settleTo(-d.width, velocity, onDelete);
     } else if (projected < -ACTION_WIDTH / 2) {
       settleTo(-ACTION_WIDTH, velocity);

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import NavBar, { NavCircle, NavAvatar } from "@/components/ui/NavBar";
-import AccountSheet from "@/components/AccountSheet";
+import { useAccountUI } from "@/components/account/AccountProvider";
 import { useAuth } from "./_app";
 import { List, ListRow } from "@/components/ui/List";
 import Card from "@/components/ui/Card";
@@ -56,7 +56,7 @@ function loadWorkoutState(): WorkoutState | null {
 export default function WorkoutPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [showAccount, setShowAccount] = useState(false);
+  const { openAccount } = useAccountUI();
   const saved = loadWorkoutState();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [activeWorkoutId, setActiveWorkoutId] = useState<number | null>(saved?.activeWorkoutId ?? null);
@@ -285,18 +285,12 @@ export default function WorkoutPage() {
             <NavCircle onClick={() => router.push("/templates")} label="Templates">
               <LayoutList size={18} strokeWidth={2.1} />
             </NavCircle>
-            <NavAvatar name={user?.name || "?"} onClick={() => setShowAccount(true)} />
+            <NavAvatar name={user?.name || "?"} onClick={openAccount} />
           </>
         }
       />
 
       <div className="mt-6">
-        <List header="All time">
-          <ListRow title="Heaviest lift" value={`${stats.topLift.toFixed(1)} kg`} chevron={false} />
-          <ListRow title="Total volume" value={`${stats.volume.toLocaleString()} kg`} chevron={false} />
-          <ListRow title="Sessions" value={stats.sessions} chevron={false} last />
-        </List>
-
         {templates.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
             <div className="glass-subtle mb-4 flex h-16 w-16 items-center justify-center rounded-full">
@@ -326,9 +320,13 @@ export default function WorkoutPage() {
             ))}
           </List>
         )}
-      </div>
 
-      <AccountSheet open={showAccount} onClose={() => setShowAccount(false)} />
+        <List header="All time">
+          <ListRow title="Heaviest lift" value={`${stats.topLift.toFixed(1)} kg`} chevron={false} />
+          <ListRow title="Total volume" value={`${stats.volume.toLocaleString()} kg`} chevron={false} />
+          <ListRow title="Sessions" value={stats.sessions} chevron={false} last />
+        </List>
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import NavBar, { NavCircle } from "@/components/ui/NavBar";
 import Sheet from "@/components/ui/Sheet";
 import SwipeRow from "@/components/ui/SwipeRow";
+import ConfirmSheet from "@/components/ui/ConfirmSheet";
 import TemplateCard from "@/components/templates/TemplateCard";
 import TemplateForm from "@/components/templates/TemplateForm";
 import { Plus, Dumbbell, ChevronLeft } from "lucide-react";
@@ -31,6 +32,7 @@ export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [confirmId, setConfirmId] = useState<number | null>(null);
   const createRef = useRef<(() => void) | null>(null);
   const editRef = useRef<(() => void) | null>(null);
 
@@ -65,6 +67,7 @@ export default function TemplatesPage() {
 
   const handleDelete = async (id: number) => {
     await fetch(`/api/templates/${id}`, { method: "DELETE" });
+    setConfirmId(null);
     fetchTemplates();
   };
 
@@ -100,7 +103,7 @@ export default function TemplatesPage() {
         ) : (
           <>
             {templates.map((t) => (
-              <SwipeRow key={t.id} label={t.name} onDelete={() => handleDelete(t.id)}>
+              <SwipeRow key={t.id} label={t.name} flingToDelete={false} onDelete={() => setConfirmId(t.id)}>
                 <TemplateCard
                   name={t.name}
                   exerciseCount={t.exercises.length}
@@ -147,6 +150,15 @@ export default function TemplatesPage() {
           />
         )}
       </Sheet>
+
+      <ConfirmSheet
+        open={confirmId !== null}
+        title={`Delete “${templates.find((t) => t.id === confirmId)?.name ?? "template"}”?`}
+        message="The template is removed. Workouts you already logged with it are kept."
+        confirmLabel="Delete template"
+        onConfirm={() => confirmId !== null && handleDelete(confirmId)}
+        onCancel={() => setConfirmId(null)}
+      />
     </div>
   );
 }

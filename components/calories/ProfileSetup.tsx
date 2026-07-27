@@ -1,6 +1,4 @@
-import { useState } from "react";
-import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
+import { useState, useEffect, type MutableRefObject } from "react";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 
@@ -11,34 +9,52 @@ interface ProfileData {
 interface ProfileSetupProps {
   initial?: Partial<ProfileData>;
   onSave: (data: ProfileData) => void;
-  onCancel?: () => void;
+  /** Receives the submit handler so the sheet's Save button can drive it while
+   *  validation stays here with the fields it validates. */
+  submitRef?: MutableRefObject<(() => void) | null>;
 }
 
-export default function ProfileSetup({ initial, onSave, onCancel }: ProfileSetupProps) {
+export default function ProfileSetup({ initial, onSave, submitRef }: ProfileSetupProps) {
   const [age, setAge] = useState(initial?.age?.toString() || "");
   const [sex, setSex] = useState(initial?.sex || "male");
   const [height, setHeight] = useState(initial?.heightCm?.toString() || "");
   const [weight, setWeight] = useState(initial?.weightKg?.toString() || "");
   const [activity, setActivity] = useState(initial?.activityLevel || "moderate");
   const [goal, setGoal] = useState(initial?.goalType || "cut");
+  // Only surface "required" hints once the user has tried to submit.
+  const [attempted, setAttempted] = useState(false);
+
+  const missing = !age || !height || !weight;
 
   const handleSubmit = () => {
-    if (!age || !height || !weight) return;
+    setAttempted(true);
+    if (missing) return;
     onSave({ age: Number(age), sex, heightCm: Number(height), weightKg: Number(weight), activityLevel: activity, goalType: goal });
   };
 
+  // Keep the exposed handler pointing at the current state, not the first render.
+  useEffect(() => {
+    if (!submitRef) return;
+    submitRef.current = handleSubmit;
+    return () => {
+      submitRef.current = null;
+    };
+  });
+
   return (
-    <Card className="animate-fade-in space-y-5">
-      <div>
-        <h3 className="text-title-sm on-material">Profile setup</h3>
-        <p className="text-caption mt-1">We need a few details to calculate your daily target.</p>
-      </div>
+    <div className="space-y-5">
+      <p className="text-caption">
+        These numbers set your daily calorie target. It recalculates automatically when your logged weight changes.
+      </p>
       <div className="grid grid-cols-2 gap-3">
-        <Input label="Age" type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="25" />
+        <Input label="Age" type="number" inputMode="numeric" value={age} onChange={(e) => setAge(e.target.value)} placeholder="25" invalid={attempted && !age} aria-describedby={attempted && missing ? "profile-errors" : undefined} />
         <Select label="Sex" value={sex} onChange={(e) => setSex(e.target.value)} options={[{ value: "male", label: "Male" }, { value: "female", label: "Female" }]} />
-        <Input label="Height (cm)" type="number" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="175" />
-        <Input label="Weight (kg)" type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="80" />
+        <Input label="Height (cm)" type="number" inputMode="decimal" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="175" invalid={attempted && !height} aria-describedby={attempted && missing ? "profile-errors" : undefined} />
+        <Input label="Weight (kg)" type="number" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="80" invalid={attempted && !weight} aria-describedby={attempted && missing ? "profile-errors" : undefined} />
       </div>
+      {/* role=alert so a failed Save from the sheet's nav bar is announced,
+          not silently swallowed. */}
+      {attempted && missing && <p id="profile-errors" role="alert" className="text-[0.8125rem] text-red-500">Age, height and weight are needed to calculate your target.</p>}
       <Select label="Activity" value={activity} onChange={(e) => setActivity(e.target.value)} options={[
         { value: "sedentary", label: "Sedentary (desk job)" }, { value: "light", label: "Light (1-2x/week)" },
         { value: "moderate", label: "Moderate (3-5x/week)" }, { value: "active", label: "Active (6-7x/week)" },
@@ -48,10 +64,6 @@ export default function ProfileSetup({ initial, onSave, onCancel }: ProfileSetup
         { value: "aggressive_cut", label: "Aggressive Cut (-1000 cal)" }, { value: "cut", label: "Cut (-500 cal)" },
         { value: "maintenance", label: "Maintenance" }, { value: "bulk", label: "Bulk (+300 cal)" },
       ]} />
-      <div className="flex gap-3 pt-1">
-        {onCancel && <Button variant="glass" onClick={onCancel} className="flex-1">Cancel</Button>}
-        <Button onClick={handleSubmit} className="flex-1">Save profile</Button>
-      </div>
-    </Card>
+    </div>
   );
 }
