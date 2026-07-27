@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
-import NavBar from "@/components/ui/NavBar";
+import NavBar, { NavAction } from "@/components/ui/NavBar";
 import { List, ListRow } from "@/components/ui/List";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -276,14 +276,7 @@ export default function WorkoutPage() {
     <div>
       <NavBar
         title="Workout"
-        trailing={
-          <button
-            onClick={() => router.push("/templates")}
-            className="pressable -mr-2 rounded-full px-2 py-1 text-[1.0625rem] text-emerald-600"
-          >
-            Templates
-          </button>
-        }
+        trailing={<NavAction onClick={() => router.push("/templates")}>Templates</NavAction>}
       />
 
       <div className="mt-6">

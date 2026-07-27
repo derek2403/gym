@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import NavBar from "@/components/ui/NavBar";
+import NavBar, { NavAction } from "@/components/ui/NavBar";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -323,13 +323,9 @@ export default function CaloriesPage() {
         title="Calories"
         subtitle="Estimates run high on purpose — log a quantity for the tightest numbers."
         trailing={
-          <button
-            onClick={() => setShowSetup(true)}
-            aria-label="Calorie settings"
-            className="pressable -mr-2 rounded-full p-2 text-emerald-600"
-          >
-            <Settings size={21} />
-          </button>
+          <NavAction onClick={() => setShowSetup(true)} label="Calorie settings" prominent>
+            <Settings size={18} />
+          </NavAction>
         }
       />
 

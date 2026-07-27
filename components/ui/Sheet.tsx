@@ -156,7 +156,7 @@ export default function Sheet({ open, title, onClose, children, confirm }: Sheet
 
       <div
         ref={panelRef}
-        className="glass-elevated relative mx-auto w-full max-w-lg rounded-t-[1.75rem] pb-8 will-change-transform"
+        className="glass-elevated relative mx-auto w-full max-w-lg rounded-t-[var(--radius-sheet)] pb-8 will-change-transform"
         style={{ transform: "translate3d(0, 100%, 0)", maxHeight: "90vh" }}
       >
         {/* The grabber and the whole bar are the drag area — a 44pt target,
@@ -172,7 +172,7 @@ export default function Sheet({ open, title, onClose, children, confirm }: Sheet
 
           {/* Modal nav bar: leave on the left, commit on the right, subject in
               the middle. Same geometry as every other modal on the platform. */}
-          <div className="mt-2 flex h-11 items-center justify-between gap-2 border-b-[0.5px] border-b-[rgba(60,60,67,0.12)] px-4">
+          <div className="relative z-[2] mt-2 flex h-11 items-center justify-between gap-2 px-4">
             <button
               onClick={onClose}
               className="pressable -mx-2 shrink-0 rounded-full px-2 py-1 text-[1.0625rem] text-emerald-600"
@@ -196,7 +196,7 @@ export default function Sheet({ open, title, onClose, children, confirm }: Sheet
           </div>
         </div>
 
-        <div className="max-h-[calc(90vh-7rem)] overflow-y-auto overscroll-contain px-4 pt-4">{children}</div>
+        <div className="relative z-[2] max-h-[calc(90vh-7rem)] overflow-y-auto overscroll-contain px-4 pt-3">{children}</div>
       </div>
     </div>
   );

@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useEffect, useRef } from "react";
 import { CalendarDays, Flame, History, Ruler, Dumbbell } from "lucide-react";
 
 /**
- * Standard tab bar: five peers, each a destination.
+ * A floating glass tab bar.
  *
- * The raised centre button this replaces was not a tab — it was an action
- * wearing a tab's clothing, which made one destination look more important than
- * the row it sat in and left the bar with an odd hole in the middle. Workout is
- * now simply the tab it always was, and starting a session is the primary
- * action *inside* that tab, where it belongs.
+ * It does not span the screen edge to edge, and it is not a background: it is a
+ * capsule of glass sitting above the content, which runs continuously beneath
+ * it. Scrolling down concentrates it — labels fade, the capsule contracts —
+ * so the content gets the room while you are reading; scrolling back up
+ * restores it. The bar is chrome, and chrome should recede when it isn't the
+ * thing you're using.
  */
 const tabs = [
   { href: "/", label: "Today", icon: CalendarDays },
@@ -21,13 +23,58 @@ const tabs = [
 
 export default function BottomNav() {
   const router = useRouter();
+  const barRef = useRef<HTMLDivElement>(null);
+  const labelsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let raf = 0;
+    let lastY = window.scrollY;
+    let condensed = false;
+
+    const setCondensed = (next: boolean) => {
+      if (next === condensed) return;
+      condensed = next;
+      const bar = barRef.current;
+      if (!bar) return;
+      bar.style.transform = next ? "translate3d(0, 0, 0) scale(0.92)" : "translate3d(0, 0, 0) scale(1)";
+      bar.dataset.condensed = String(next);
+    };
+
+    const update = () => {
+      raf = 0;
+      const y = window.scrollY;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const dy = y - lastY;
+      // Ignore rubber-band overscroll at either end, which otherwise flickers
+      // the bar as the page settles.
+      if (y > 12 && y < max - 12 && Math.abs(dy) > 4) {
+        setCondensed(dy > 0);
+      }
+      if (y <= 12) setCondensed(false);
+      lastY = y;
+    };
+
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
   return (
     <nav
-      className="chrome fixed inset-x-0 bottom-0 z-50 rounded-none border-x-0 border-b-0 border-t-[0.5px] border-t-[rgba(60,60,67,0.14)]"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center px-4"
+      style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
     >
-      <div className="mx-auto flex max-w-lg items-stretch">
+      <div
+        ref={barRef}
+        data-condensed="false"
+        className="chrome group/bar pointer-events-auto flex w-full max-w-[26rem] origin-bottom items-center rounded-[var(--radius-chrome)] px-1.5 py-1.5 transition-transform duration-[var(--response-base)] ease-[var(--ease-settle)]"
+      >
         {tabs.map(({ href, label, icon: Icon }) => {
           const active = router.pathname === href;
           return (
@@ -35,18 +82,29 @@ export default function BottomNav() {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className="group flex flex-1 flex-col items-center gap-1 pb-1.5 pt-2 outline-none"
+              aria-label={label}
+              className="pressable relative flex flex-1 flex-col items-center justify-center gap-[3px] rounded-[1.375rem] py-2 outline-none"
             >
+              {/* The selection is itself a small pane of tinted glass, lit from
+                  the same direction as the bar it sits in. */}
+              {active && (
+                <span
+                  className="glass glass-accent absolute inset-0 rounded-[1.375rem]"
+                  aria-hidden="true"
+                  style={{ backdropFilter: "none", WebkitBackdropFilter: "none" }}
+                />
+              )}
               <Icon
-                size={24}
-                strokeWidth={active ? 2.2 : 1.7}
-                className={`transition-colors duration-[var(--response-fast)] group-active:opacity-60 ${
-                  active ? "text-emerald-600" : "text-[color:var(--ink-tertiary)]"
+                size={22}
+                strokeWidth={active ? 2.3 : 1.8}
+                className={`relative z-[2] transition-colors duration-[var(--response-fast)] ${
+                  active ? "text-emerald-700" : "text-[color:var(--ink-tertiary)]"
                 }`}
               />
               <span
-                className={`text-[0.625rem] leading-none tracking-[0.01em] transition-colors duration-[var(--response-fast)] ${
-                  active ? "font-semibold text-emerald-600" : "font-medium text-[color:var(--ink-tertiary)]"
+                ref={labelsRef}
+                className={`relative z-[2] overflow-hidden text-[0.5625rem] leading-none tracking-[0.01em] transition-all duration-[var(--response-base)] ease-[var(--ease-settle)] group-data-[condensed=true]/bar:h-0 group-data-[condensed=true]/bar:opacity-0 ${
+                  active ? "font-semibold text-emerald-700" : "font-medium text-[color:var(--ink-tertiary)]"
                 }`}
               >
                 {label}

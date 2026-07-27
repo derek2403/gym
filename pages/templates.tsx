@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
-import NavBar from "@/components/ui/NavBar";
+import NavBar, { NavAction } from "@/components/ui/NavBar";
 import Sheet from "@/components/ui/Sheet";
 import SwipeRow from "@/components/ui/SwipeRow";
 import TemplateCard from "@/components/templates/TemplateCard";
@@ -75,22 +75,15 @@ export default function TemplatesPage() {
       <NavBar
         title="Templates"
         leading={
-          <button
-            onClick={() => router.push("/workout")}
-            className="pressable -ml-2 flex items-center gap-0.5 rounded-full py-1 pl-1 pr-2 text-[1.0625rem] text-emerald-600"
-          >
-            <ChevronLeft size={22} strokeWidth={2.5} />
+          <NavAction onClick={() => router.push("/workout")}>
+            <ChevronLeft size={18} strokeWidth={2.6} className="-ml-1" />
             Workout
-          </button>
+          </NavAction>
         }
         trailing={
-          <button
-            onClick={() => setShowForm(true)}
-            aria-label="New template"
-            className="pressable -mr-2 rounded-full p-2 text-emerald-600"
-          >
-            <Plus size={24} strokeWidth={2.4} />
-          </button>
+          <NavAction onClick={() => setShowForm(true)} label="New template" prominent>
+            <Plus size={20} strokeWidth={2.5} />
+          </NavAction>
         }
       />
 
