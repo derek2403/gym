@@ -35,6 +35,8 @@ export default function TemplateForm({
 }: TemplateFormProps) {
   const [name, setName] = useState(initialName);
   const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
+  // Only surface "required" hints once the user has tried to submit.
+  const [attempted, setAttempted] = useState(false);
 
   const updateExercise = (i: number, field: keyof Exercise, value: string | number) => {
     setExercises((prev) => prev.map((e, idx) => (idx === i ? { ...e, [field]: value } : e)));
@@ -55,25 +57,40 @@ export default function TemplateForm({
     setExercises((prev) => prev.map((e, idx) => (idx === i ? { ...e, ...normalizeRepRange(e) } : e)));
   };
 
+  const nameMissing = !name.trim();
+  const exerciseMissing = !exercises.some((e) => e.exerciseName.trim());
+
   const handleSubmit = () => {
-    if (!name.trim()) return;
+    setAttempted(true);
+    if (nameMissing || exerciseMissing) return;
     const valid = exercises.filter((e) => e.exerciseName.trim()).map((e) => ({ ...e, ...normalizeRepRange(e) }));
-    if (!valid.length) return;
     onSubmit(name, valid);
   };
 
   return (
     <div className="animate-fade-in space-y-4">
-      <Input label="Template name" placeholder="e.g., Push Day" value={name} onChange={(e) => setName(e.target.value)} />
+      <div>
+        <Input
+          label="Template name"
+          placeholder="e.g., Push Day"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className={attempted && nameMissing ? "ring-2 ring-red-500/30" : undefined}
+        />
+        {attempted && nameMissing && <p className="mt-2 text-[12px] text-red-500">Give the template a name.</p>}
+      </div>
 
       <div className="space-y-3">
-        <span className="text-overline">Exercises</span>
+        <div className="flex items-baseline justify-between">
+          <span className="text-overline">Exercises</span>
+          {attempted && exerciseMissing && <span className="text-[12px] text-red-500">Name at least one exercise.</span>}
+        </div>
         {exercises.map((ex, i) => (
           <Card key={i} variant="subtle" className="p-4">
             <div className="flex items-start gap-3">
               <div className="flex-1 space-y-3">
                 <input
-                  className="w-full rounded-xl bg-black/[0.04] px-3.5 py-3 text-[15px] text-black/85 placeholder:text-black/15 outline-none focus:bg-black/[0.06]"
+                  className={`w-full rounded-xl bg-black/[0.04] px-3.5 py-3 text-[15px] text-black/85 placeholder:text-black/15 outline-none focus:bg-black/[0.06] ${attempted && exerciseMissing ? "ring-2 ring-red-500/30" : ""}`}
                   placeholder="Exercise name"
                   value={ex.exerciseName}
                   onChange={(e) => updateExercise(i, "exerciseName", e.target.value)}
