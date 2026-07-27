@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
+import Sheet from "@/components/ui/Sheet";
+import SwipeRow from "@/components/ui/SwipeRow";
 import TemplateCard from "@/components/templates/TemplateCard";
 import TemplateForm from "@/components/templates/TemplateForm";
 import { Plus, Dumbbell } from "lucide-react";
@@ -69,66 +71,67 @@ export default function TemplatesPage() {
     <div>
       <PageHeader
         title="Templates"
-        subtitle="Build workouts from real exercises."
+        subtitle="Swipe a template to delete it."
         action={
-          !showForm && !editingId ? (
-            <Button size="sm" onClick={() => setShowForm(true)}>
-              <Plus size={16} />
-              New
-            </Button>
-          ) : undefined
+          <Button size="sm" onClick={() => setShowForm(true)}>
+            <Plus size={16} />
+            New
+          </Button>
         }
       />
 
-      {showForm && (
-        <TemplateForm
-          onSubmit={handleCreate}
-          onCancel={() => setShowForm(false)}
-        />
-      )}
-
-      {editingId && editingTemplate && (
-        <TemplateForm
-          initialName={editingTemplate.name}
-          initialExercises={editingTemplate.exercises.map((e) => ({
-            exerciseName: e.exerciseName,
-            targetSets: e.targetSets,
-            targetRepsMin: e.targetRepsMin,
-            targetRepsMax: e.targetRepsMax,
-            restSeconds: e.restSeconds,
-            intervalSeconds: e.intervalSeconds,
-          }))}
-          onSubmit={handleUpdate}
-          onCancel={() => setEditingId(null)}
-          submitLabel="Save changes"
-        />
-      )}
-
-      {!showForm && !editingId && (
-        <div className="space-y-3">
-          {templates.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-zinc-900">
-                <Dumbbell size={28} className="text-zinc-600" />
-              </div>
-              <p className="text-sm text-zinc-500">
-                No exercise templates yet. Create one to start workouts quickly.
-              </p>
+      <div className="space-y-3">
+        {templates.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="glass-subtle mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+              <Dumbbell size={28} className="text-[color:var(--ink-quaternary)]" />
             </div>
-          ) : (
-            templates.map((t) => (
+            <p className="text-caption max-w-[15rem]">
+              No templates yet. Create one to start workouts quickly.
+            </p>
+          </div>
+        ) : (
+          templates.map((t) => (
+            <SwipeRow key={t.id} label={t.name} onDelete={() => handleDelete(t.id)}>
               <TemplateCard
-                key={t.id}
                 name={t.name}
                 exerciseCount={t.exercises.length}
                 exercises={t.exercises}
                 onEdit={() => setEditingId(t.id)}
-                onDelete={() => handleDelete(t.id)}
               />
-            ))
-          )}
-        </div>
-      )}
+            </SwipeRow>
+          ))
+        )}
+      </div>
+
+      {/* Create and edit both arrive as a sheet you can throw back down —
+          the same path in and out. */}
+      <Sheet open={showForm} title="New template" onClose={() => setShowForm(false)}>
+        <TemplateForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
+      </Sheet>
+
+      <Sheet
+        open={editingId !== null}
+        title={editingTemplate ? `Edit ${editingTemplate.name}` : "Edit template"}
+        onClose={() => setEditingId(null)}
+      >
+        {editingTemplate && (
+          <TemplateForm
+            initialName={editingTemplate.name}
+            initialExercises={editingTemplate.exercises.map((e) => ({
+              exerciseName: e.exerciseName,
+              targetSets: e.targetSets,
+              targetRepsMin: e.targetRepsMin,
+              targetRepsMax: e.targetRepsMax,
+              restSeconds: e.restSeconds,
+              intervalSeconds: e.intervalSeconds,
+            }))}
+            onSubmit={handleUpdate}
+            onCancel={() => setEditingId(null)}
+            submitLabel="Save changes"
+          />
+        )}
+      </Sheet>
     </div>
   );
 }

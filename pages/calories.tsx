@@ -6,7 +6,8 @@ import Input from "@/components/ui/Input";
 import CalorieRing from "@/components/calories/CalorieRing";
 import MacroBar from "@/components/calories/MacroBar";
 import ProfileSetup from "@/components/calories/ProfileSetup";
-import { Settings, ChevronLeft, ChevronRight, Trash2, Loader2, Sparkles, Camera, PenLine } from "lucide-react";
+import { Settings, ChevronLeft, ChevronRight, Loader2, Sparkles, Camera, PenLine } from "lucide-react";
+import SwipeRow from "@/components/ui/SwipeRow";
 import { todayStr, formatDateDisplay, formatDate, formatDateShort } from "@/lib/utils";
 import { calculateTDEE, calculateGoalCalories, getMacroTargets, type Sex, type ActivityLevel, type GoalType } from "@/lib/formulas";
 
@@ -585,23 +586,16 @@ export default function CaloriesPage() {
                 </div>
                 <div className="space-y-1.5">
                   {mealEntries.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="flex items-center justify-between rounded-2xl bg-[rgba(120,120,128,0.09)]/50 px-3 py-2"
-                    >
-                      <div className="flex-1">
-                        <p className="text-[15px] text-[color:var(--ink)]">{entry.description}</p>
-                        <p className="tabular-nums text-[10px] text-[color:var(--ink-quaternary)]">
-                          {Math.round(entry.calories)} kcal · {entry.proteinG}p · {entry.carbsG}c · {entry.fatG}f
-                        </p>
+                    <SwipeRow key={entry.id} label={entry.description} onDelete={() => deleteEntry(entry.id)}>
+                      <div className="flex items-center justify-between rounded-[0.875rem] bg-[rgba(120,120,128,0.08)] px-3.5 py-2.5">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[0.9375rem] text-[color:var(--ink)]">{entry.description}</p>
+                          <p className="mt-0.5 tabular-nums text-[0.6875rem] text-[color:var(--ink-quaternary)]">
+                            {Math.round(entry.calories)} kcal · {entry.proteinG}p · {entry.carbsG}c · {entry.fatG}f
+                          </p>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => deleteEntry(entry.id)}
-                        className="ml-2 p-1 text-[color:var(--ink-quaternary)] transition-colors hover:text-red-400"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    </SwipeRow>
                   ))}
                 </div>
               </Card>

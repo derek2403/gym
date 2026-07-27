@@ -1,4 +1,4 @@
-const CACHE_NAME = "gym-v1";
+const CACHE_NAME = "gym-v3";
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();

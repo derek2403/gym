@@ -94,7 +94,7 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
     <AuthProvider>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="theme-color" content="#f2f2f7" />
+        <meta name="theme-color" content="#f7f7fa" />
         <title>Gym Tracker</title>
       </Head>
       <AppContent Component={Component} pageProps={pageProps} getLayout={getLayout} />

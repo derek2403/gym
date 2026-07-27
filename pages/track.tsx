@@ -3,7 +3,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import { Trash2 } from "lucide-react";
+import SwipeRow from "@/components/ui/SwipeRow";
 import { todayStr, formatDateShort } from "@/lib/utils";
 import { estimateBodyFat, type Sex } from "@/lib/formulas";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -157,15 +157,15 @@ export default function TrackPage() {
         ) : (
           <div className="space-y-2">
             {metrics.slice(0, 10).map((m) => (
-              <div key={m.id} className="flex items-center justify-between rounded-2xl bg-[rgba(120,120,128,0.06)] px-4 py-3">
-                <div>
-                  <span className="tabular-nums text-[15px] font-medium text-[color:var(--ink)]">{m.value}<span className="text-[color:var(--ink-quaternary)]">{activeOption.unit}</span></span>
-                  <span className="ml-3 text-caption">{formatDateShort(m.date)}</span>
+              <SwipeRow key={m.id} label={`${m.value}${activeOption.unit} on ${formatDateShort(m.date)}`} onDelete={() => handleDelete(m.id)}>
+                <div className="flex items-center justify-between rounded-[0.875rem] bg-[rgba(120,120,128,0.08)] px-4 py-3">
+                  <span className="tabular-nums text-[0.9375rem] font-medium text-[color:var(--ink)]">
+                    {m.value}
+                    <span className="text-[color:var(--ink-quaternary)]">{activeOption.unit}</span>
+                  </span>
+                  <span className="text-caption">{formatDateShort(m.date)}</span>
                 </div>
-                <button onClick={() => handleDelete(m.id)} className="p-1.5 text-[color:var(--ink-quaternary)] transition-colors hover:text-red-400">
-                  <Trash2 size={14} />
-                </button>
-              </div>
+              </SwipeRow>
             ))}
           </div>
         )}

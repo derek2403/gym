@@ -6,6 +6,8 @@ import StatBox from "@/components/ui/StatBox";
 import RestTimer from "@/components/workout/RestTimer";
 import TemplateCard from "@/components/templates/TemplateCard";
 import TemplateForm from "@/components/templates/TemplateForm";
+import Sheet from "@/components/ui/Sheet";
+import SwipeRow from "@/components/ui/SwipeRow";
 import { Dumbbell, Play, Check, Plus, X, ArrowDownUp } from "lucide-react";
 import { formatRepRange } from "@/lib/utils";
 
@@ -321,14 +323,16 @@ export default function WorkoutPage() {
             </Card>
           ) : (
             templates.map((t) => (
-              <Card key={t.id} onClick={() => startWorkout(t)}>
+              <Card key={t.id} className="p-5" onClick={() => startWorkout(t)}>
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10">
-                    <Play size={20} className="text-emerald-400" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15">
+                    <Play size={20} className="text-emerald-600" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-title-sm text-[color:var(--ink)]">{t.name}</h3>
-                    <p className="text-caption mt-0.5 truncate">{t.exercises.map((e) => e.exerciseName).join(" · ")}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-title-sm on-material truncate">{t.name}</h3>
+                    <p className="text-caption mt-0.5 truncate">
+                      {t.exercises.reduce((n, e) => n + e.targetSets, 0)} sets · {t.exercises.map((e) => e.exerciseName).join(" · ")}
+                    </p>
                   </div>
                 </div>
               </Card>
@@ -339,31 +343,43 @@ export default function WorkoutPage() {
 
       {viewMode === "templates" && (
         <div className="animate-fade-in">
-          {!showForm && !editingId && (
-            <Button size="sm" className="mb-5 w-full" onClick={() => setShowForm(true)}><Plus size={16} />New template</Button>
-          )}
-          {showForm && <TemplateForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />}
-          {editingId && editingTemplate && (
-            <TemplateForm initialName={editingTemplate.name}
-              initialExercises={editingTemplate.exercises.map((e) => ({ exerciseName: e.exerciseName, targetSets: e.targetSets, targetRepsMin: e.targetRepsMin, targetRepsMax: e.targetRepsMax, restSeconds: e.restSeconds, intervalSeconds: e.intervalSeconds }))}
-              onSubmit={handleUpdate} onCancel={() => setEditingId(null)} submitLabel="Save changes" />
-          )}
-          {!showForm && !editingId && (
-            <div className="space-y-3">
-              {templates.length === 0 ? (
-                <div className="py-16 text-center">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(120,120,128,0.06)]">
-                    <Dumbbell size={28} className="text-[color:var(--ink-quaternary)]" />
-                  </div>
-                  <p className="text-caption">No templates yet</p>
+          <Button size="sm" className="mb-5 w-full" onClick={() => setShowForm(true)}><Plus size={16} />New template</Button>
+          <div className="space-y-3">
+            {templates.length === 0 ? (
+              <div className="py-16 text-center">
+                <div className="glass-subtle mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                  <Dumbbell size={28} className="text-[color:var(--ink-quaternary)]" />
                 </div>
-              ) : templates.map((t) => (
-                <TemplateCard key={t.id} name={t.name} exerciseCount={t.exercises.length} exercises={t.exercises} onEdit={() => setEditingId(t.id)} onDelete={() => handleDelete(t.id)} />
-              ))}
-            </div>
-          )}
+                <p className="text-caption">No templates yet</p>
+              </div>
+            ) : templates.map((t) => (
+              <SwipeRow key={t.id} label={t.name} onDelete={() => handleDelete(t.id)}>
+                <TemplateCard name={t.name} exerciseCount={t.exercises.length} exercises={t.exercises} onEdit={() => setEditingId(t.id)} />
+              </SwipeRow>
+            ))}
+          </div>
         </div>
       )}
+
+      <Sheet open={showForm} title="New template" onClose={() => setShowForm(false)}>
+        <TemplateForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
+      </Sheet>
+
+      <Sheet
+        open={editingId !== null}
+        title={editingTemplate ? `Edit ${editingTemplate.name}` : "Edit template"}
+        onClose={() => setEditingId(null)}
+      >
+        {editingTemplate && (
+          <TemplateForm
+            initialName={editingTemplate.name}
+            initialExercises={editingTemplate.exercises.map((e) => ({ exerciseName: e.exerciseName, targetSets: e.targetSets, targetRepsMin: e.targetRepsMin, targetRepsMax: e.targetRepsMax, restSeconds: e.restSeconds, intervalSeconds: e.intervalSeconds }))}
+            onSubmit={handleUpdate}
+            onCancel={() => setEditingId(null)}
+            submitLabel="Save changes"
+          />
+        )}
+      </Sheet>
     </div>
   );
 }
